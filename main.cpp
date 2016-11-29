@@ -7,6 +7,8 @@
 using namespace std;
 using namespace arma;
 
+
+void run_Metropolis(int L, int dim, int z, int mcsteps, int bins, double J, double beta, double s);
 double energy(int N, double J, vector<double> state);
 double energychanged(double energy);
 
@@ -19,8 +21,10 @@ int main()
     int dim = 2;          // Dimension of system
     int z = 4;            // Number of neighbours
     int N = pow(L, dim);  // Number of sites
+    int mcsteps = 1000;   // Number of Monte Carlo steps
+    int bins = 100;       // Number of bins
     double J = 0.2;       // Strength of interaction
-    double beta = 0.1;    // Temperature
+    double beta = 0.0;    // Temperature
     double s = 0.5;       // Size of spin
     // Initial state
     /*
@@ -28,10 +32,23 @@ int main()
     for(int i=0; i<N; i++)    state(i) = s; // All spins point up. Could choose something else, of course.
     */
 
-    mat state = mat(N,N);
-    for(int i=0; i<N; i++)
+    run_Metropolis(L, dim, z, mcsteps, bins, J, beta, s);
+
+
+
+
+
+} // End of main
+
+
+void run_Metropolis(int L, int dim, int z, int mcsteps, int bins, double J, double beta, double s)
+{
+    int N = pow(L, dim);  // Number of sites
+
+    mat state = mat(L,L);
+    for(int i=0; i<L; i++)
     {
-        for(int j=0; j<N; j++)    state(i,j) = s; // All spins point up
+        for(int j=0; j<L; j++)    state(i,j) = s; // All spins point up
     }
 
     // Should I have a vector for the energies? Or use bitwise operations? Probably easier?
@@ -43,7 +60,7 @@ int main()
     double drawn;
     double energy_new;
     double energy_change;
-    int P_change;
+    int P_change;         // ?
     double energy_curr = -z*J*s*s*N;
 
 
@@ -55,26 +72,26 @@ int main()
     for(int i=0; i<1000; i++)
     {  // Traversing through the spins non-randomly
         cout << "i = " << i << endl;
-        for(int j=0; j<N;j++)
+        for(int j=0; j<L;j++)
         {
-            for(int k=0; k<N; k++)
+            for(int k=0; k<L; k++)
             {   // Know thy neighbours
                 // But seriously, there should be a simpler way to do this...
                 // Double check at least
 
                 if(j==0)            // Plus sign in front as state(j,k) --> -state(j,k).
                 {
-                    if(k==0)         energy_change = J*state(0,k)*(state(N-1,k) + state(0,N-1) + state(0,1) + state(1,k));
-                    else if(k==N-1)  energy_change = J*state(0,k)*(state(N-1,k) + state(0,k-1) + state(1,k) + state(0,0));
-                    else             energy_change = J*state(0,k)*(state(N-1,k) + state(0,k-1) + state(1,k) + state(0,k+1));
+                    if(k==0)         energy_change = J*state(0,k)*(state(L-1,k) + state(0,L-1) + state(0,1) + state(1,k));
+                    else if(k==L-1)  energy_change = J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,0));
+                    else             energy_change = J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,k+1));
                 }
                 if(k==0)
                 {
-                    if(j==N-1)                     energy_change = J*state(j,0)*(state(j-1,0) + state(j,N-1) + state(0,0) + state(0,1));
-                    if(j!=0 && j!=N-1)             energy_change = J*state(j,0)*(state(j-1,0) + state(j,N-1) + state(j+1,0) + state(j,1));
+                    if(j==L-1)                     energy_change = J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(0,0) + state(0,1));
+                    if(j!=0 && j!=L-1)             energy_change = J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(j+1,0) + state(j,1));
                 }
-                if(j==N-1 && k!=0 && k!=N-1)       energy_change = J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(0,k) + state(j,k+1));
-                if(k==N-1 && j!=0 && j!=N-1)       energy_change = J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,0));
+                if(j==L-1 && k!=0 && k!=L-1)       energy_change = J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(0,k) + state(j,k+1));
+                if(k==L-1 && j!=0 && j!=L-1)       energy_change = J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,0));
 
                 energy_new = energy_curr + energy_change;
                 if(energy_new <= energy_curr)
@@ -100,70 +117,80 @@ int main()
 
     // Monte Carlo steps
 
-    int runs = 10000;
-    double msq_av_bin1 = 0;
-    double msq_av_bin2 = 0;
-    double msq_av_bin3 = 0;
+    //int runs = 10000;
+    double msq_av_bin = 0;
     double m = 0;
 
-    for(int i=0; i<runs; i++)
-    {  // Traversing through the spins non-randomly
-        for(int j=0; j<N;j++)
-        {
-            for(int k=0; k<N; k++)
-            {   // Know thy neighbours
-                // But seriously, there should be a simpler way to do this...
-                // Double check at least
-                if(j==0)            // Plus sign in front as state(j,k) --> -state(j,k).
-                {
-                    if(k==0)         energy_change = J*state(0,k)*(state(N-1,k) + state(0,N-1) + state(0,1) + state(1,k));
-                    else if(k==N-1)  energy_change = J*state(0,k)*(state(N-1,k) + state(0,k-1) + state(1,k) + state(0,0));
-                    else             energy_change = J*state(0,k)*(state(N-1,k) + state(0,k-1) + state(1,k) + state(0,k+1));
-                }
-                if(k==0)
-                {
-                    if(j==N-1)                     energy_change = J*state(j,0)*(state(j-1,0) + state(j,N-1) + state(0,0) + state(0,1));
-                    if(j!=0 && j!=N-1)             energy_change = J*state(j,0)*(state(j-1,0) + state(j,N-1) + state(j+1,0) + state(j,k+1));
-                }
-                if(j==N-1 && k!=0 && k!=N-1)       energy_change = J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(0,k) + state(j,k+1));
-                if(k==N-1 && j!=0 && j!=N-1)       energy_change = J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,0));
-
-                energy_new = energy_curr + energy_change;
-                if(energy_new <= energy_curr)
-                {
-                    state(j,k) = -state(j,k); // Flip spin if the result is a state with lower energy.
-                    energy_curr = energy_new; // Update energy
-                }
-                else
-                {
-                    prob = exp(-beta*(energy_new-energy_curr));
-                    drawn = distribution(generator);
-                    if(drawn<prob)
+    for(int l=0; l<bins; l++)
+    {
+        for(int i=0; i<mcsteps; i++)
+        {  // Traversing through the spins non-randomly
+            for(int j=0; j<L;j++)
+            {
+                for(int k=0; k<L; k++)
+                {   // Know thy neighbours
+                    // But seriously, there should be a simpler way to do this...
+                    // Double check at least
+                    if(j==0)            // Plus sign in front as state(j,k) --> -state(j,k).
                     {
-                        state(j,k) = -state(j,k);  // Flip spin.
-                        energy_curr = energy_new;  // Update energy
+                        if(k==0)         energy_change = J*state(0,k)*(state(L-1,k) + state(0,L-1) + state(0,1) + state(1,k));
+                        else if(k==L-1)  energy_change = J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,0));
+                        else             energy_change = J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,k+1));
                     }
-                }
-            } // End loop over k
-        } // End loop over j. All lattice points have been traversed over
-        //Commands to find quantity. Magnetization?
-        for(int i=0; i<N; i++)
-        {
-            for(int j=0; j<N; j++)    m += state(i,j);
+                    if(k==0)
+                    {
+                        if(j==L-1)                     energy_change = J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(0,0) + state(0,1));
+                        if(j!=0 && j!=L-1)             energy_change = J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(j+1,0) + state(j,k+1));
+                    }
+                    if(j==L-1 && k!=0 && k!=L-1)       energy_change = J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(0,k) + state(j,k+1));
+                    if(k==L-1 && j!=0 && j!=L-1)       energy_change = J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,0));
+
+                    energy_new = energy_curr + energy_change;
+                    if(energy_new <= energy_curr)
+                    {
+                        state(j,k) = -state(j,k); // Flip spin if the result is a state with lower energy.
+                        energy_curr = energy_new; // Update energy
+                    }
+                    else
+                    {
+                        prob = exp(-beta*(energy_new-energy_curr));
+                        drawn = distribution(generator);
+                        if(drawn<prob)
+                        {
+                            state(j,k) = -state(j,k);  // Flip spin.
+                            energy_curr = energy_new;  // Update energy
+                        }
+                    }
+                } // End loop over k
+            } // End loop over j. All lattice points have been traversed over
+            //Commands to find quantity. Magnetization?
+            for(int i=0; i<L; i++)
+            {
+                for(int j=0; j<L; j++)    m += state(i,j);
+            }
+
+            msq_av_bin += m*m/(N*N);  // should I maybe take the absolute value instead?
+            //cout << "m = " << m << "; m**2 = " << msq_av_bin1 << endl;
+            m = 0; // Resetting for the next run
         }
 
-        msq_av_bin1 += m*m;  // should I maybe take the absolute value instead?
-        cout << "m = " << m << "; m**2 = " << msq_av_bin1 << endl;
-        m = 0; // Resetting for the next run
+        msq_av_bin = msq_av_bin/mcsteps; // Dividing by the number of configurations.
+
+        // Basically, just print commands ... Should write to file instead.
+        cout << "Bin no. : " << l << endl;
+        cout << "Average magnetization^2: " <<  msq_av_bin << endl;
+        cout << "Total magnetization^2: " << msq_av_bin*N*N << endl;
+        cout << "RMS Total magnetization: " << sqrt(msq_av_bin*N*N) << endl;
+        cout << "Total magnetization^2/s^2: " << msq_av_bin*N*N/(s*s) << endl;
+        cout << "RMS Total magnetization*s: " << sqrt(msq_av_bin*N*N*s*s) << endl;
+        cout << "Average magnetization^2/s^2: " <<  msq_av_bin/(s*s) << endl;
+        cout << "Number of spins: " << N << endl << endl;
+        msq_av_bin = 0;
     }
 
-    msq_av_bin1 = msq_av_bin1/runs; // Dividing by the number of configurations.
-
-    cout << msq_av_bin1 << endl;    // Crazy high...
+} // End of Monte Carlo function
 
 
-
-} // End of main
 
 
 /*
