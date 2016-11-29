@@ -1,26 +1,18 @@
-# Hey ho
-
 from numpy import *
 from scipy import *
 from matplotlib.pyplot import *
 import time
 import sys
 
-# Set these as they were when making the file. Change these according to the data set you read
+# Open the file for reading
+infile = open("testrun3_IsingMC.txt", "r")
 
-
-# Opening the file. Change the name as you wish
-#infile = open("/home/ubu/Master/Tidlig_Arbeid/2particlePalHuse/pal_huse_2d-build-desktop-Qt_4_8_1_in_PATH__System__Release/randompot_h0to5_J1_av500_res301_filtered_cranked_coordinateFile.txt", "r")
-
-#infile = open("randompot_h0to5_J1_av500_res301_filtered_cranked_coordinateFile.txt", "r")
-infile = open("firstrun_IsingMC.txt", "r")
-
-firstline = infile.readline() # Reads the first line (or so I hope)
+# The first line contains information about the system. We read that separately
+firstline = infile.readline() # Reads the first line only
 
 # Number of spins, spin size, number of bins
 N, s, bins  = firstline.split()
-N = int(N); s = float(s); bins = int(bins)
-
+N = int(N); s = float(s); bins = int(bins)   # Tested, and this is done successfully
 
 # Getting lists ready to store the data
 betas = []
@@ -44,22 +36,27 @@ for line in lines:
             betas.append(beta)
         m = words[1]
         m = float(m)
-        all_ms.append(m)            # ?
         binhold_m.append(m)
         counter +=1
         # When we are done with each temperature:
-        if(counter==bins):
-            counter = 0
-            m_beta_average.append(0)                  # Creating a new element
-            for i in range(0,bins):
-                m_beta_average[j] += binhold_m[i]     # Indexing said element
-            j += 1                                    # Updating index
-            binhold_m = []
+        if(counter==bins):                              # After getting a result from each bin                          
+            m_beta_average.append(0)                    # Creating a new element in the list
+            for i in range(0,bins):                     # Loop over all the bins
+                m_beta_average[j] += binhold_m[i]/bins  # Indexing said element
+                # Do some error analysis here
+            j += 1                                      # Updating index
+            binhold_m = []                              # Reset binhold_m for the next temperature
+            counter = 0                                 # Reset the counter so that we can do the same for the next temperature
         
         
 # We prefer arrays
 betas = array(betas)
 m_beta_average = array(m_beta_average)
+m_beta_average_divs = m_beta_average/(s*s)
+mtotal_beta_average = N*N*m_beta_average
+RS_mtotal_beta_average = sqrt(mtotal_beta_average)
+RMS_m_beta_average = sqrt(m_beta_average)
+RMS_m_beta_average_divs = sqrt(m_beta_average_divs)
 
 # Remember to close the file
 infile.close()
@@ -67,10 +64,50 @@ infile.close()
 # Doing the plotting thing
 figure()
 plot(betas, m_beta_average, 'r')
-title('Average squared magnetization vs temperature in the Ising model') # This is probably too long
+title('Average squared magnetization vs temperature in the Ising model')
 xlabel(r'$\beta$')
 ylabel('m')
 show()
+
+figure()
+plot(betas, m_beta_average_divs, 'r')
+title('Average squared magnetization vs temperature in the Ising model, with s=1')
+xlabel(r'$\beta$')
+ylabel('m')
+show()
+
+figure()
+plot(betas, mtotal_beta_average, 'r')
+title('Total squared magnetization vs temperature in the Ising model, with s=1')
+xlabel(r'$\beta$')
+ylabel('m')
+show()
+
+figure()
+plot(betas, RMS_m_beta_average, 'r')
+title('RMS magnetization vs temperature in the Ising model')
+xlabel(r'$\beta$')
+ylabel('m')
+show()
+
+figure()
+plot(betas, RMS_m_beta_average_divs, 'r')
+title('RMS magnetization vs temperature in the Ising model, with s=1')
+xlabel(r'$\beta$')
+ylabel('m')
+show()
+
+figure()
+plot(betas, RS_mtotal_beta_average, 'r')
+title('Root squared magnetization vs temperature in the Ising model, with s=1')
+xlabel(r'$\beta$')
+ylabel('m')
+show()
+
+
+
+
+
 
 
 

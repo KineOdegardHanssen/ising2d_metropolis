@@ -25,10 +25,10 @@ int main()
     int mcsteps = 1000;   // Number of Monte Carlo steps
     int bins = 100;       // Number of bins
     double J = 0.2;       // Strength of interaction
-    double beta = 0.0;    // Temperature/ Initializing beta
-    int Nbetas = 100;     // Number of different temperatures probed
-    double betamin = 0;   // Lowest temperature
-    double betamax = 10;  // Highest temperature
+    double beta = 0;    // Temperature/ Initializing beta
+    int Nbetas = 10;     // Number of different temperatures probed
+    double betamin = 0.01;   // Lowest temperature
+    double betamax = 100;  // Highest temperature
     double s = 0.5;       // Size of spin
     // Initial state
     /*
@@ -38,13 +38,13 @@ int main()
 
     // Opening a file to print to
     ofstream printFile;
-    string filenamePrefix = "firstrun";
+    string filenamePrefix = "testrun_discard";
     char *filename = new char[1000];                                    // File name can have max 1000 characters
     sprintf(filename, "%s_IsingMC.txt", filenamePrefix.c_str() ); // Create filename with prefix and ending
     printFile.open(filename);
 
 
-    printFile << N << " " << s << endl;  // A line of data about the system at the top
+    printFile << N << " " << s << " " << bins << endl;  // A line of data about the system at the top
 
     //run_Metropolis(L, dim, z, mcsteps, bins, J, beta, s, printFile);
 
@@ -66,20 +66,24 @@ int main()
     double energy_change;
     double energy_curr = -z*J*s*s*N;
 
-    // Equilibration procedure (Not sure I need this if the initial has all spins pointing up)
 
     for(int n=0; n<Nbetas; n++)
     {
+        // Picking the beta
         beta = betas(n);
+
+        // Setting up the intial state
         mat state = mat(L,L);
         for(int i=0; i<L; i++)
         {
             for(int j=0; j<L; j++)    state(i,j) = s; // All spins point up
         }
 
+        // Equilibration procedure (Not sure I need this if the initial has all spins pointing up)
+
+
         for(int i=0; i<1000; i++)
         {  // Traversing through the spins non-randomly
-            cout << "i = " << i << endl;
             for(int j=0; j<L;j++)
             {
                 for(int k=0; k<L; k++)
@@ -89,17 +93,18 @@ int main()
 
                     if(j==0)            // Plus sign in front as state(j,k) --> -state(j,k).
                     {
-                        if(k==0)         energy_change = J*state(0,k)*(state(L-1,k) + state(0,L-1) + state(0,1) + state(1,k));
-                        else if(k==L-1)  energy_change = J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,0));
-                        else             energy_change = J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,k+1));
+                        if(k==0)         energy_change = 2*J*state(0,k)*(state(L-1,k) + state(0,L-1) + state(0,1) + state(1,k));
+                        else if(k==L-1)  energy_change = 2*J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,0));
+                        else             energy_change = 2*J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,k+1));
                     }
                     if(k==0)
                     {
-                        if(j==L-1)                     energy_change = J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(0,0) + state(0,1));
-                        if(j!=0 && j!=L-1)             energy_change = J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(j+1,0) + state(j,1));
+                        if(j==L-1)                     energy_change = 2*J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(0,0) + state(0,1));
+                        if(j!=0 && j!=L-1)             energy_change = 2*J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(j+1,0) + state(j,1));
                     }
-                    if(j==L-1 && k!=0 && k!=L-1)       energy_change = J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(0,k) + state(j,k+1));
-                    if(k==L-1 && j!=0 && j!=L-1)       energy_change = J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,0));
+                    if(j==L-1 && k!=0 && k!=L-1)       energy_change = 2*J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(0,k) + state(j,k+1));
+                    if(k==L-1 && j!=0 && j!=L-1)       energy_change = 2*J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,0));
+                    if(j!=0 && j!=L-1 && k!=0 && k!=L-1)    energy_change = 2*J*state(j,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,k+1));
 
                     energy_new = energy_curr + energy_change;
                     if(energy_new <= energy_curr)
@@ -121,7 +126,7 @@ int main()
             }
         }
 
-        cout << "Done with the equilibration part (now I just have to wait and see how well it actually works...)" << endl;
+        //cout << "Done with the equilibration part (now I just have to wait and see how well it actually works...)" << endl;
 
         // Monte Carlo steps
 
@@ -143,17 +148,19 @@ int main()
                         // + enforcing boundary conditions
                         if(j==0)            // Plus sign in front as state(j,k) --> -state(j,k).
                         {
-                            if(k==0)         energy_change = J*state(0,k)*(state(L-1,k) + state(0,L-1) + state(0,1) + state(1,k));
-                            else if(k==L-1)  energy_change = J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,0));
-                            else             energy_change = J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,k+1));
+                            if(k==0)         energy_change = 2*J*state(0,k)*(state(L-1,k) + state(0,L-1) + state(0,1) + state(1,k));
+                            else if(k==L-1)  energy_change = 2*J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,0));
+                            else             energy_change = 2*J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,k+1));
                         }
                         if(k==0)
                         {
-                            if(j==L-1)                     energy_change = J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(0,0) + state(0,1));
-                            if(j!=0 && j!=L-1)             energy_change = J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(j+1,0) + state(j,k+1));
+                            if(j==L-1)                     energy_change = 2*J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(0,0) + state(0,1));
+                            if(j!=0 && j!=L-1)             energy_change = 2*J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(j+1,0) + state(j,k+1));
                         }
-                        if(j==L-1 && k!=0 && k!=L-1)       energy_change = J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(0,k) + state(j,k+1));
-                        if(k==L-1 && j!=0 && j!=L-1)       energy_change = J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,0));
+                        if(j==L-1 && k!=0 && k!=L-1)       energy_change = 2*J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(0,k) + state(j,k+1));
+                        if(k==L-1 && j!=0 && j!=L-1)       energy_change = 2*J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,0));
+                        if(j!=0 && j!=L-1 && k!=0 && k!=L-1)    energy_change = 2*J*state(j,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,k+1));
+
 
                         energy_new = energy_curr + energy_change;
                         if(energy_new <= energy_curr)
