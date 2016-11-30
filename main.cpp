@@ -26,7 +26,7 @@ int main()
     int bins = 100;       // Number of bins
     double J = 0.2;       // Strength of interaction
     double beta = 0;    // Temperature/ Initializing beta
-    int Nbetas = 300;     // Number of different temperatures probed
+    int Nbetas = 50;     // Number of different temperatures probed
     double betamin = 0;   // Lowest temperature
     double betamax = 0.1;  // Highest temperature
     double s = 0.5;       // Size of spin
@@ -38,7 +38,7 @@ int main()
 
     // Opening a file to print to
     ofstream printFile;
-    string filenamePrefix = "beta0to0p01_Nbetas300_mcsteps1000_bins100";
+    string filenamePrefix = "testing_beta0to0p1_Nbetas50_mcsteps1000_bins100";
     char *filename = new char[1000];                                    // File name can have max 1000 characters
     sprintf(filename, "%s_IsingMC.txt", filenamePrefix.c_str() ); // Create filename with prefix and ending
     printFile.open(filename);
@@ -48,10 +48,8 @@ int main()
 
     //run_Metropolis(L, dim, z, mcsteps, bins, J, beta, s, printFile);
 
-
-
     vec betas = linspace(betamin, betamax, Nbetas);             // For simulate different temperatures
-    mat binholder_m = mat(l,mcsteps);                           // Holds the values for each MC step.
+    mat binholder_m = mat(bins,mcsteps);                           // Holds the values for each MC step.
                                                                 //To be deleted after each bin
 
     // Where should I put this?
@@ -68,6 +66,10 @@ int main()
     double energy_new;
     double energy_change;
     double energy_curr = -z*J*s*s*N;
+
+    //
+    double m_average;
+
 
     // For error analysis/ correlation functions
     double covariance_term = 0;
@@ -139,12 +141,14 @@ int main()
         // Monte Carlo steps
 
         //int runs = 10000;
-        vec msq_av_bin = zeros(l);
+        vec msq_av_bin = zeros(bins);
         double m = 0;
 
+        double counter = 0;
         for(int l=0; l<bins; l++)
         {   // Loop over the bins
             msq_av_bin(l) = 0;
+
             for(int i=0; i<mcsteps; i++)
             {   // Loop over the Monte Carlo steps
                 // Traversing through the spins non-randomly
@@ -219,7 +223,7 @@ int main()
         {
             for(int k=0; k<mcsteps; k++)    variance += (binholder_m(i,k)-m_average)*(binholder_m(i,k)-m_average);
         }
-        variance = variance*1/(bins*mcsteps);
+        variance = variance/(bins*mcsteps);
 
 
         // Finding the covariance term in sigma_m, according to MHJ:
@@ -228,13 +232,23 @@ int main()
         {
             for(int k=0; k<mcsteps; k++)
             {
-                for(int p=0; p<k; p++)    covariance_term += (binholder_m(i,k)-m_average)*(binholder_m(i,p)-m_average);
+                for(int p=0; p<k; p++)
+                {
+                    //double hi = (binholder_m(i,k)-m_average)*(binholder_m(i,p)-m_average);
+                    covariance_term += (binholder_m(i,k)-m_average)*(binholder_m(i,p)-m_average);
+                    /*if(hi<0)
+                    {
+                        cout << "Negative contribution to  the covariance term" << endl;
+                        counter++;
+                        cout << "This is the " << counter << "th time" << endl;
+                    }*/
+                }
             }
         }
-        covariance_term = covariance_term*2/(bins*mcsteps^2);
+        covariance_term = covariance_term*2/(bins*mcsteps*mcsteps);
 
         // Sigma_m^2, according to MHJ
-        sigma_msq = variance/bins + covariance_term;
+        sigma_msq = variance/mcsteps + covariance_term;
 
         // Autocorrelation time
         autocorrelation_time = 0;
@@ -245,10 +259,13 @@ int main()
                 for(int k=0; k<(bins-d); k++)    autocorrelation_time += (binholder_m(i,k)-m_average)*(binholder_m(k+d)-m_average);
             }
         }
-        autocorrelation_time = 2/(bins*mcsteps*variance)*autocorrelation_time + 1;
+        autocorrelation_time = autocorrelation_time*2/(bins*mcsteps*variance);
+        autocorrelation_time += 1;
+        // Hardcoding to avoid infinities in correlation-free experiment
+        if(sigma_msq==0 && variance==0 && covariance_term==0)    autocorrelation_time = 1; // Correlation free experiment: autocorrelation_time=1
+        // Get infinity when variance=0, but when covariance=0, we have a correlation-free experiment.
 
-
-        cout << beta << " " << m_average << " " << sigma_msq << " " << variance << " " << covariance_term << " " << autocorrelation_time  << endl;
+        printFile << beta << " " << m_average << " " << sigma_msq << " " << variance << " " << covariance_term << " " << autocorrelation_time  << endl;
 
     }  // End of loop over betas. Index n out.
     delete filename;
