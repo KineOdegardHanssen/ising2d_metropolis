@@ -51,7 +51,8 @@ int main()
 
 
     vec betas = linspace(betamin, betamax, Nbetas);             // For simulate different temperatures
-    vec binholder_m = zeros(bins);
+    mat binholder_m = mat(l,mcsteps);                           // Holds the values for each MC step.
+                                                                //To be deleted after each bin
 
     // Where should I put this?
     std::default_random_engine generator;                       // I asked the internet, and it replied
@@ -61,12 +62,18 @@ int main()
     // If I use bitwise operations, I could store one state in one element of a vector. But that is a lot of
     // states. So no.
 
+    // Quantities for determining system state
     double prob;
     double drawn;
     double energy_new;
     double energy_change;
     double energy_curr = -z*J*s*s*N;
 
+    // For error analysis/ correlation functions
+    double covariance_term = 0;
+    double variance = 0;
+    double sigma_msq = 0;
+    double autocorrelation_time = 0;
 
     for(int n=0; n<Nbetas; n++)
     {
@@ -132,13 +139,15 @@ int main()
         // Monte Carlo steps
 
         //int runs = 10000;
-        double msq_av_bin = 0;
+        vec msq_av_bin = zeros(l);
         double m = 0;
 
         for(int l=0; l<bins; l++)
-        {
+        {   // Loop over the bins
+            msq_av_bin(l) = 0;
             for(int i=0; i<mcsteps; i++)
-            {  // Traversing through the spins non-randomly
+            {   // Loop over the Monte Carlo steps
+                // Traversing through the spins non-randomly
                 for(int j=0; j<L;j++)
                 {
                     for(int k=0; k<L; k++)
@@ -181,208 +190,69 @@ int main()
                         } // End if-tests of energy
                     } // End loop over k
                 } // End loop over j. All lattice points have been traversed over
-                //Commands to find quantity. Magnetization?
-                m = 0; // Resetting for this run
-                for(int i=0; i<L; i++)
+                //Commands to find quantity
+                m = 0;    // Resetting for this run
+                for(int a=0; a<L; a++)
                 {
-                    for(int j=0; j<L; j++)    m += state(i,j);
+                    for(int b=0; b<L; b++)    m += state(a,b);
                 }  // Finding the desired quantity
 
-                msq_av_bin += m*m/(N*N);  // should I maybe take the absolute value instead?
-                binholder_m(l)=m;
-                //cout << "m = " << m << "; m**2 = " << msq_av_bin1 << endl;
-            }  // End over Monte Carlo steps
+                double yo = m*m/(N*N); // Man gave name to all the quantities. In the beginning. In the beginning.
+                msq_av_bin(l) += yo;   // Should I maybe take the absolute value instead?
+                binholder_m(l,i)= yo;  // Save each value of m grouped by bin.
+            }  // End of Monte Carlo steps. Index i out.
 
-            msq_av_bin = msq_av_bin/mcsteps; // Dividing by the number of configurations.
+            msq_av_bin(l) = msq_av_bin(l)/mcsteps; // Dividing by the number of configurations.
 
-            /*
-            // Basically, just print commands ... Should write to file instead.
-            cout << "Bin no. : " << l << endl;
-            cout << "Average magnetization^2: " <<  msq_av_bin << endl;
-            cout << "Total magnetization^2: " << msq_av_bin*N*N << endl;
-            cout << "RMS Total magnetization: " << sqrt(msq_av_bin*N*N) << endl;
-            cout << "Total magnetization^2/s^2: " << msq_av_bin*N*N/(s*s) << endl;
-            cout << "RMS Total magnetization*s: " << sqrt(msq_av_bin*N*N*s*s) << endl;
-            cout << "Average magnetization^2/s^2: " <<  msq_av_bin/(s*s) << endl;
-            cout << "Number of spins: " << N << endl << endl;
-            */
+        }  // End of loop over bins. Index l out.
 
-            printFile << beta << " " << msq_av_bin << endl;
+        // Have print commands here instead.
 
-            msq_av_bin = 0;
-        }  // End of loop over bins
+        // Calculating the average magnetization over all bins.
+        m_average = 0;
+        for(int i=0; i<bins; i++)    m_average += msq_av_bin(i);
+        m_average = m_average/bins;
 
-    }  // End of loop over betas
+        // Variance, according to MHJ
+        variance = 0;
+        for(int i=0; i<bins; i++)
+        {
+            for(int k=0; k<mcsteps; k++)    variance += (binholder_m(i,k)-m_average)*(binholder_m(i,k)-m_average);
+        }
+        variance = variance*1/(bins*mcsteps);
+
+
+        // Finding the covariance term in sigma_m, according to MHJ:
+        covariance_term = 0;
+        for(int i=0; i<bins; i++)
+        {
+            for(int k=0; k<mcsteps; k++)
+            {
+                for(int p=0; p<k; p++)    covariance_term += (binholder_m(i,k)-m_average)*(binholder_m(i,p)-m_average);
+            }
+        }
+        covariance_term = covariance_term*2/(bins*mcsteps^2);
+
+        // Sigma_m^2, according to MHJ
+        sigma_msq = variance/bins + covariance_term;
+
+        // Autocorrelation time
+        autocorrelation_time = 0;
+        for(int i=0; i<bins; i++)
+        {
+            for(int d=0; d<(bins-1); d++) // Kind of a weird limit
+            {
+                for(int k=0; k<(bins-d); k++)    autocorrelation_time += (binholder_m(i,k)-m_average)*(binholder_m(k+d)-m_average);
+            }
+        }
+        autocorrelation_time = 2/(bins*mcsteps*variance)*autocorrelation_time + 1;
+
+
+        cout << beta << " " << m_average << " " << sigma_msq << " " << variance << " " << covariance_term << " " << autocorrelation_time  << endl;
+
+    }  // End of loop over betas. Index n out.
     delete filename;
     printFile.close(); // Closing the file
 
 } // End of main
 
-/*
-void run_Metropolis(int L, int dim, int z, int mcsteps, int bins, double J, double beta, double s, ofstream printFile)
-{
-    int N = pow(L, dim);  // Number of sites
-
-    mat state = mat(L,L);
-    for(int i=0; i<L; i++)
-    {
-        for(int j=0; j<L; j++)    state(i,j) = s; // All spins point up
-    }
-
-    // Should I have a vector for the energies? Or use bitwise operations? Probably easier?
-    // If I use bitwise operations, I could store one state in one element of a vector. But that is a lot of
-    // states. So no.
-
-
-    double prob;
-    double drawn;
-    double energy_new;
-    double energy_change;
-    int P_change;         // ?
-    double energy_curr = -z*J*s*s*N;
-
-
-    // Equilibration procedure (Not sure I need this if the initial has all spins pointing up)
-
-    std::default_random_engine generator;                       // I asked the internet, and it replied
-    std::uniform_real_distribution<double> distribution(0,1);
-
-    for(int i=0; i<1000; i++)
-    {  // Traversing through the spins non-randomly
-        cout << "i = " << i << endl;
-        for(int j=0; j<L;j++)
-        {
-            for(int k=0; k<L; k++)
-            {   // Know thy neighbours
-                // But seriously, there should be a simpler way to do this...
-                // Double check at least
-
-                if(j==0)            // Plus sign in front as state(j,k) --> -state(j,k).
-                {
-                    if(k==0)         energy_change = J*state(0,k)*(state(L-1,k) + state(0,L-1) + state(0,1) + state(1,k));
-                    else if(k==L-1)  energy_change = J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,0));
-                    else             energy_change = J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,k+1));
-                }
-                if(k==0)
-                {
-                    if(j==L-1)                     energy_change = J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(0,0) + state(0,1));
-                    if(j!=0 && j!=L-1)             energy_change = J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(j+1,0) + state(j,1));
-                }
-                if(j==L-1 && k!=0 && k!=L-1)       energy_change = J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(0,k) + state(j,k+1));
-                if(k==L-1 && j!=0 && j!=L-1)       energy_change = J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,0));
-
-                energy_new = energy_curr + energy_change;
-                if(energy_new <= energy_curr)
-                {
-                    state(j,k) = -state(j,k); // Flip spin if the result is a state with lower energy.
-                    energy_curr = energy_new; // Update energy
-                }
-                else
-                {
-                    prob = exp(-beta*(energy_new-energy_curr));
-                    drawn = distribution(generator);
-                    if(drawn<prob)
-                    {
-                        state(j,k) = -state(j,k);  // Flip spin.
-                        energy_curr = energy_new;  // Update energy
-                    }
-                }
-            }
-        }
-    }
-
-    cout << "Done with the equilibration part (now I just have to wait and see how well it actually works...)" << endl;
-
-    // Monte Carlo steps
-
-    //int runs = 10000;
-    double msq_av_bin = 0;
-    double m = 0;
-
-    for(int l=0; l<bins; l++)
-    {
-        for(int i=0; i<mcsteps; i++)
-        {  // Traversing through the spins non-randomly
-            for(int j=0; j<L;j++)
-            {
-                for(int k=0; k<L; k++)
-                {   // Know thy neighbours
-                    // But seriously, there should be a simpler way to do this...
-                    // Double check at least
-                    if(j==0)            // Plus sign in front as state(j,k) --> -state(j,k).
-                    {
-                        if(k==0)         energy_change = J*state(0,k)*(state(L-1,k) + state(0,L-1) + state(0,1) + state(1,k));
-                        else if(k==L-1)  energy_change = J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,0));
-                        else             energy_change = J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,k+1));
-                    }
-                    if(k==0)
-                    {
-                        if(j==L-1)                     energy_change = J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(0,0) + state(0,1));
-                        if(j!=0 && j!=L-1)             energy_change = J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(j+1,0) + state(j,k+1));
-                    }
-                    if(j==L-1 && k!=0 && k!=L-1)       energy_change = J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(0,k) + state(j,k+1));
-                    if(k==L-1 && j!=0 && j!=L-1)       energy_change = J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,0));
-
-                    energy_new = energy_curr + energy_change;
-                    if(energy_new <= energy_curr)
-                    {
-                        state(j,k) = -state(j,k); // Flip spin if the result is a state with lower energy.
-                        energy_curr = energy_new; // Update energy
-                    }
-                    else
-                    {
-                        prob = exp(-beta*(energy_new-energy_curr));
-                        drawn = distribution(generator);
-                        if(drawn<prob)
-                        {
-                            state(j,k) = -state(j,k);  // Flip spin.
-                            energy_curr = energy_new;  // Update energy
-                        }
-                    }
-                } // End loop over k
-            } // End loop over j. All lattice points have been traversed over
-            //Commands to find quantity. Magnetization?
-            for(int i=0; i<L; i++)
-            {
-                for(int j=0; j<L; j++)    m += state(i,j);
-            }
-
-            msq_av_bin += m*m/(N*N);  // should I maybe take the absolute value instead?
-            //cout << "m = " << m << "; m**2 = " << msq_av_bin1 << endl;
-            m = 0; // Resetting for the next run
-        }
-
-        msq_av_bin = msq_av_bin/mcsteps; // Dividing by the number of configurations.
-
-        // Basically, just print commands ... Should write to file instead.
-        cout << "Bin no. : " << l << endl;
-        cout << "Average magnetization^2: " <<  msq_av_bin << endl;
-        cout << "Total magnetization^2: " << msq_av_bin*N*N << endl;
-        cout << "RMS Total magnetization: " << sqrt(msq_av_bin*N*N) << endl;
-        cout << "Total magnetization^2/s^2: " << msq_av_bin*N*N/(s*s) << endl;
-        cout << "RMS Total magnetization*s: " << sqrt(msq_av_bin*N*N*s*s) << endl;
-        cout << "Average magnetization^2/s^2: " <<  msq_av_bin/(s*s) << endl;
-        cout << "Number of spins: " << N << endl << endl;
-
-        printFile << beta << " " << msq_av_bin << endl;
-
-        msq_av_bin = 0;
-    }
-
-} // End of Monte Carlo function
-*/
-
-
-
-/*
-// No, no, no, there is a much simpler way.
-double energy(int N, double J, vector<double> state)  // Periodic boundary conditions
-{   // But how to determine which ones are neighbours?
-    double E = 0;
-    for(int i=0; i<(N-1); i++)    E -= J*state(i)*state(i+1);
-    E -= J*state(N-1)*state(0);
-}
-
-// Have E_change and E_prev and change by
-
-*/
