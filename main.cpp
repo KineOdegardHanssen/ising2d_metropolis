@@ -26,9 +26,9 @@ int main()
     int bins = 100;       // Number of bins
     double J = 0.2;       // Strength of interaction
     double beta = 0;    // Temperature/ Initializing beta
-    int Nbetas = 10;     // Number of different temperatures probed
-    double betamin = 0.01;   // Lowest temperature
-    double betamax = 100;  // Highest temperature
+    int Nbetas = 300;     // Number of different temperatures probed
+    double betamin = 0;   // Lowest temperature
+    double betamax = 0.1;  // Highest temperature
     double s = 0.5;       // Size of spin
     // Initial state
     /*
@@ -38,7 +38,7 @@ int main()
 
     // Opening a file to print to
     ofstream printFile;
-    string filenamePrefix = "testrun_discard";
+    string filenamePrefix = "beta0to0p01_Nbetas300_mcsteps1000_bins100";
     char *filename = new char[1000];                                    // File name can have max 1000 characters
     sprintf(filename, "%s_IsingMC.txt", filenamePrefix.c_str() ); // Create filename with prefix and ending
     printFile.open(filename);
@@ -50,7 +50,8 @@ int main()
 
 
 
-    vec betas = linspace(betamin, betamax, Nbetas);
+    vec betas = linspace(betamin, betamax, Nbetas);             // For simulate different temperatures
+    vec binholder_m = zeros(bins);
 
     // Where should I put this?
     std::default_random_engine generator;                       // I asked the internet, and it replied
@@ -99,11 +100,11 @@ int main()
                     }
                     if(k==0)
                     {
-                        if(j==L-1)                     energy_change = 2*J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(0,0) + state(0,1));
+                        if(j==L-1)                     energy_change = 2*J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(0,0) + state(j,1));
                         if(j!=0 && j!=L-1)             energy_change = 2*J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(j+1,0) + state(j,1));
                     }
-                    if(j==L-1 && k!=0 && k!=L-1)       energy_change = 2*J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(0,k) + state(j,k+1));
-                    if(k==L-1 && j!=0 && j!=L-1)       energy_change = 2*J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,0));
+                    if(j==L-1 && k!=0 && k!=L-1)       energy_change = 2*J*state(j,k)*(state(j-1,k) + state(j,k-1) + state(0,k) + state(j,k+1));
+                    if(k==L-1 && j!=0 && j!=L-1)       energy_change = 2*J*state(j,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,0));
                     if(j!=0 && j!=L-1 && k!=0 && k!=L-1)    energy_change = 2*J*state(j,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,k+1));
 
                     energy_new = energy_curr + energy_change;
@@ -148,17 +149,17 @@ int main()
                         // + enforcing boundary conditions
                         if(j==0)            // Plus sign in front as state(j,k) --> -state(j,k).
                         {
-                            if(k==0)         energy_change = 2*J*state(0,k)*(state(L-1,k) + state(0,L-1) + state(0,1) + state(1,k));
-                            else if(k==L-1)  energy_change = 2*J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,0));
-                            else             energy_change = 2*J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(1,k) + state(0,k+1));
+                            if(k==0)         energy_change = 2*J*state(0,k)*(state(L-1,k) + state(0,L-1) + state(0,k+1) + state(1,k));
+                            else if(k==L-1)  energy_change = 2*J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(0,0)   + state(1,k));
+                            else             energy_change = 2*J*state(0,k)*(state(L-1,k) + state(0,k-1) + state(0,k+1) + state(1,k));
                         }
                         if(k==0)
                         {
-                            if(j==L-1)                     energy_change = 2*J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(0,0) + state(0,1));
+                            if(j==L-1)                     energy_change = 2*J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(0,0)   + state(j,1));
                             if(j!=0 && j!=L-1)             energy_change = 2*J*state(j,0)*(state(j-1,0) + state(j,L-1) + state(j+1,0) + state(j,k+1));
                         }
-                        if(j==L-1 && k!=0 && k!=L-1)       energy_change = 2*J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(0,k) + state(j,k+1));
-                        if(k==L-1 && j!=0 && j!=L-1)       energy_change = 2*J*state(0,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,0));
+                        if(j==L-1 && k!=0 && k!=L-1)       energy_change = 2*J*state(j,k)*(state(j-1,k) + state(j,k-1) + state(0,k)   + state(j,k+1));
+                        if(k==L-1 && j!=0 && j!=L-1)       energy_change = 2*J*state(j,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,0));
                         if(j!=0 && j!=L-1 && k!=0 && k!=L-1)    energy_change = 2*J*state(j,k)*(state(j-1,k) + state(j,k-1) + state(j+1,k) + state(j,k+1));
 
 
@@ -181,14 +182,15 @@ int main()
                     } // End loop over k
                 } // End loop over j. All lattice points have been traversed over
                 //Commands to find quantity. Magnetization?
+                m = 0; // Resetting for this run
                 for(int i=0; i<L; i++)
                 {
                     for(int j=0; j<L; j++)    m += state(i,j);
                 }  // Finding the desired quantity
 
                 msq_av_bin += m*m/(N*N);  // should I maybe take the absolute value instead?
+                binholder_m(l)=m;
                 //cout << "m = " << m << "; m**2 = " << msq_av_bin1 << endl;
-                m = 0; // Resetting for the next run
             }  // End over Monte Carlo steps
 
             msq_av_bin = msq_av_bin/mcsteps; // Dividing by the number of configurations.
