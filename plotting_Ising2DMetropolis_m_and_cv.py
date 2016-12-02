@@ -4,13 +4,8 @@ from matplotlib.pyplot import *
 import time
 import sys
 
-# Available data files
-# beta0to10_Nbetas100_J1_mcsteps1000_bins100_IsingMC.txt
-# beta0to0p01_Nbetas100_J1_mcsteps1000_bins100_IsingMC.txt
-# beta0to0p1_Nbetas100_J1_mcsteps1000_bins100_IsingMC.txt
-
 # Open the file for reading
-infile = open("beta0to10_Nbetas100_J1_mcsteps1000_bins100_IsingMC.txt", "r")
+infile = open("beta0to5_Nbetas100__spin0p5_L15_J1_mcsteps1000_bins100_IsingMC.txt", "r")
 
 
 # The first line contains information about the system. We read that separately
@@ -69,42 +64,42 @@ infile.close()
 # Doing the plotting thing
 figure()
 plot(betas, m_avs, 'r')
-title('Average squared magnetization $<m>^2$ in the Ising model, spin=', s, ' L=', L)
+title('Average squared magnetization $<m>^2$ in the Ising model')
 xlabel(r'$\beta$')
 ylabel(r'$<m>^2$')
 show()
 
 figure()
 errorbar(betas, m_avs, yerr=blockvars)
-title('$<m>^2$ in the Ising model with error bars, s=', s, ' L=', L)
+title('$<m>^2$ in the Ising model with error bars')
 xlabel(r'$\beta$')
 ylabel(r'$<m>^2$')
 show()
 
 figure()
 plot(betas, blockvars, 'r')
-title(r'Variance $\sigma_B$ of $<m>^2$ in the Ising model, s=', s, 'L=', L)
+title(r'Variance $\sigma_B$ of $<m>^2$ in the Ising model')
 xlabel(r'$\beta$')
 ylabel(r'$\sigma_B$')
 show()
 
 figure()
 plot(betas, cvs, 'r')
-title(r'Heat capacity $C_v$ in the Ising model, s=,'s, 'L=', L)
+title(r'Heat capacity $C_v$ in the Ising model')
 xlabel(r'$\beta$')
 ylabel(r'$C_v$')
 show()
 
 figure()
 plot(betas, eavs, 'r')
-title(r'Energy $<E>$ in the Ising model, s=,'s, 'L=', L)
+title(r'Energy $<E>$ in the Ising model')
 xlabel(r'$\beta$')
 ylabel(r'$<E>$')
 show()
 
 figure()
 plot(betas, esqavs, 'r')
-title(r'$<E>^2$ in the Ising model, s=,'s, 'L=', L)
+title(r'$<E>^2$ in the Ising model')
 xlabel(r'$\beta$')
 ylabel(r'$<E>$')
 show()

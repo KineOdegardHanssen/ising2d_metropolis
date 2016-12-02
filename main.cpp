@@ -28,7 +28,7 @@ int main()
     double beta;          // Temperature/ Initializing beta
     int Nbetas = 100;     // Number of different temperatures probed
     double betamin = 0;   // Lowest temperature
-    double betamax = 0.1;  // Highest temperature
+    double betamax = 5;  // Highest temperature
     double s = 0.5;       // Size of spin
     // Initial state
     /*
@@ -38,7 +38,7 @@ int main()
 
     // Opening a file to print to
     ofstream printFile;
-    string filenamePrefix = "beta0to0p1_Nbetas100__spin0p5_L15_J1_mcsteps1000_bins100";
+    string filenamePrefix = "beta0to5_Nbetas100__spin0p5_L15_J1_mcsteps1000_bins100";
     char *filename = new char[1000];                                    // File name can have max 1000 characters
     sprintf(filename, "%s_IsingMC.txt", filenamePrefix.c_str() ); // Create filename with prefix and ending
     printFile.open(filename);
@@ -73,19 +73,19 @@ int main()
     std::uniform_real_distribution<double> distribution(0,1);
 
     std::default_random_engine generator2;
-    std::uniform_real_distribution<int> distribution2(0,L-1);
+    std::uniform_int_distribution<int> distribution2(0,L-1);
 
     // Should I have a vector for the energies? Or use bitwise operations? Probably easier?
     // If I use bitwise operations, I could store one state in one element of a vector. But that is a lot of
     // states. So no.
 
     // Quantities for determining system state
-    double x;
-    double y;
-    double xp1;
-    double xm1;
-    double yp1;
-    double ym1;
+    int x;
+    int y;
+    int xp1;
+    int xm1;
+    int yp1;
+    int ym1;
     double prob;
     double drawn;
     double energy_new;
