@@ -38,7 +38,7 @@ int main()
 
     // Opening a file to print to
     ofstream printFile;
-    string filenamePrefix = "beta0to0p1_Nbetas100_J1_mcsteps1000_bins100";
+    string filenamePrefix = "beta0to0p1_Nbetas100__spin0p5_L15_J1_mcsteps1000_bins100";
     char *filename = new char[1000];                                    // File name can have max 1000 characters
     sprintf(filename, "%s_IsingMC.txt", filenamePrefix.c_str() ); // Create filename with prefix and ending
     printFile.open(filename);
@@ -54,8 +54,19 @@ int main()
     //run_Metropolis(L, dim, z, mcsteps, bins, J, beta, s, printFile);
 
     vec betas = linspace(betamin, betamax, Nbetas);             // For simulate different temperatures
-    mat binholder_m = mat(bins,mcsteps);                           // Holds the values for each MC step.
-                                                                //To be deleted after each bin
+
+    // Magnetization
+    vec msq_av_bin = zeros(bins);
+    mat binholder_m = mat(bins,mcsteps);                        // Holds the values for each MC step.
+
+    // Energy
+    vec av_E = zeros(bins);
+    mat binholder_E = mat(bins, mcsteps);
+
+    // Energy squared
+    vec av_Esq = zeros(bins);
+    mat binholder_Esq = mat(bins, mcsteps);
+
 
     // Where should I put this?
     std::default_random_engine generator;                       // I asked the internet, and it replied
@@ -81,15 +92,11 @@ int main()
     double energy_change;
     double energy_curr = -z*J*s*s*N;
 
-    //
-    double m_average;
-
-
-    // For error analysis/ correlation functions
-    double covariance_term = 0;
-    double variance = 0;
-    double sigma_msq = 0;
-    double autocorrelation_time = 0;
+    // Relevant quantities
+    double m_average;    // Well, <m^2>, m is magnetization per site.
+    double E_average;    // The energy for the total system.
+    double Esq_average;  // Squared energy for the total system.
+    double cv;           // Found by E_average and Esq_average.
 
     for(int n=0; n<Nbetas; n++)
     {
@@ -127,7 +134,7 @@ int main()
 
                 if(energy_new <= energy_curr)
                 {
-                    state(j,k) = -state(j,k); // Flip spin if the result is a state with lower energy.
+                    state(x,y) = -state(x,y); // Flip spin if the result is a state with lower energy.
                     energy_curr = energy_new; // Update energy
                 }
                 else
@@ -137,7 +144,7 @@ int main()
                     if(drawn<prob)
                     {
 
-                        state(j,k) = -state(j,k);  // Flip spin.
+                        state(x,y) = -state(x,y);  // Flip spin.
                         energy_curr = energy_new;  // Update energy
                     }
                 }
@@ -149,18 +156,16 @@ int main()
         // Monte Carlo steps
 
         //int runs = 10000;
-        vec msq_av_bin = zeros(bins);
         double m = 0;
 
         //double counter = 0;
         for(int l=0; l<bins; l++)
         {   // Loop over the bins
             msq_av_bin(l) = 0;
-
             for(int i=0; i<mcsteps; i++)
             {   // Loop over the Monte Carlo steps
                 // Traversing through the spins non-randomly
-                for(int j=0; j<L;j++)
+                for(int j=0; j<N;j++)
                 {
                     x = distribution2(generator2);
                     y = distribution2(generator2);
@@ -180,7 +185,7 @@ int main()
                     energy_new = energy_curr + energy_change;
                     if(energy_new <= energy_curr)
                     { // If the new energy is lower than the energy of the old, we commit the change
-                        state(j,k) = -state(j,k); // Flip spin if the result is a state with lower energy.
+                        state(x,y) = -state(x,y); // Flip spin if the result is a state with lower energy.
                         energy_curr = energy_new; // Update energy
                     }
                     else
@@ -189,11 +194,11 @@ int main()
                         drawn = distribution(generator);
                         if(drawn<prob)
                         {
-                            state(j,k) = -state(j,k);  // Flip spin.
+                            state(x,y) = -state(x,y);  // Flip spin.
                             energy_curr = energy_new;  // Update energy
                         }
                     } // End if-tests of energy
-                } // End loop over j. All lattice points have been traversed over
+                } // End loop over j. N lattice points have been traversed over
                 //Commands to find quantity
                 m = 0;    // Resetting for this run
                 for(int a=0; a<L; a++)
@@ -204,69 +209,30 @@ int main()
                 double yo = m*m/(N*N); // Man gave name to all the quantities. In the beginning. In the beginning.
                 msq_av_bin(l) += yo;   // Accumulating the average for bin l
                 binholder_m(l,i)= yo;  // Save each value of m grouped by bin.
+
+                av_E(l) += energy_curr;
+                binholder_E(l,i) = energy_curr;
+
+                av_Esq(l) += energy_curr*energy_curr;
+                binholder_Esq(l,i) = energy_curr*energy_curr;
+
+                allFile << m << " " << energy_curr << endl;
+
             }  // End of Monte Carlo steps. Index i out.
             // Dividing by the number of configurations to get the average for bin l
             msq_av_bin(l) = msq_av_bin(l)/mcsteps;
+            av_E(l)       = av_E(l)/mcsteps;
+            av_Esq(l)     = av_Esq(l)/mcsteps;
 
         }  // End of loop over bins. Index l out.
 
+        // Magnetization
         // Calculating the average magnetization over all bins.
         m_average = 0;
         for(int i=0; i<bins; i++)    m_average += msq_av_bin(i);
         m_average = m_average/bins;
 
-        // Variance, according to MHJ
-        variance = 0;
-        // Loop for accumulating terms for the variance
-        for(int i=0; i<bins; i++)
-        {
-            for(int k=0; k<mcsteps; k++)    variance += (binholder_m(i,k)-m_average)*(binholder_m(i,k)-m_average);
-        }
-        // Dividing to get the variance
-        variance = variance/(bins*mcsteps);
-
-
-        // Finding the covariance term in sigma_m, according to MHJ:
-        covariance_term = 0;
-        // Loop for accumulating terms for the covariance term
-        for(int i=0; i<bins; i++)
-        {
-            for(int k=0; k<mcsteps; k++)
-            {
-                for(int p=0; p<k; p++)
-                {
-                    //double hi = (binholder_m(i,k)-m_average)*(binholder_m(i,p)-m_average);
-                    covariance_term += (binholder_m(i,k)-m_average)*(binholder_m(i,p)-m_average);
-                    /*if(hi<0)
-                    {
-                        // cout << "Negative contribution to  the covariance term" << endl;
-                        counter++;
-                        //cout << "This is the " << counter << "th time" << endl;
-                    }*/
-                }
-            }
-        }
-        // Multiplying to get the covariance term
-        covariance_term = covariance_term*2/(bins*mcsteps*mcsteps);
-
-        // Sigma_m^2, according to MHJ
-        sigma_msq = variance/mcsteps + covariance_term;
-
-        // Autocorrelation time, according to MHJ
-        autocorrelation_time = 0;
-        for(int i=0; i<bins; i++)
-        {
-            for(int d=0; d<(bins-1); d++) // Kind of a weird limit
-            {
-                for(int k=0; k<(bins-d); k++)    autocorrelation_time += (binholder_m(i,k)-m_average)*(binholder_m(k+d)-m_average);
-            }
-        }
-        autocorrelation_time = autocorrelation_time*2/(bins*mcsteps*variance);
-        autocorrelation_time += 1;
-        // Hardcoding to avoid infinities in correlation-free experiment
-        if(sigma_msq==0 && variance==0 && covariance_term==0)    autocorrelation_time = 1; // Correlation free experiment: autocorrelation_time=1
-        // Get infinity when variance=0, but when covariance=0, we have a correlation-free experiment.
-
+        // Use this:
         // What the others seem to be suggesting (Formula from Kosovan and Sega)
         // This is quite similar to the variance...
         double blockvariance = 0;
@@ -275,11 +241,19 @@ int main()
         // Dividing
         blockvariance = blockvariance/(bins*(bins-1));
 
+        // Heat capacity
+        E_average = 0;
+        for(int i=0; i<bins; i++)    E_average += av_E(i);
+        E_average = E_average/bins;
 
-        printFile << beta << " " << m_average << " " << sigma_msq << " " << variance << " " << covariance_term << " " << autocorrelation_time << " " << blockvariance  << endl;
+        Esq_average = 0;
+        for(int i=0; i<bins; i++)    Esq_average += av_Esq(i);
+        Esq_average = Esq_average/bins;
 
-        //cout << "Number of negative contributions to the covariance term:" << counter << endl;
-        //counter = 0;
+        cv = 1/(beta*beta)*(Esq_average-E_average*E_average);
+
+        // Printing to file
+        printFile << beta << " " << m_average << " " << blockvariance << " " << cv << " " << E_average << " " << Esq_average << endl;
 
     }  // End of loop over betas. Index n out.
     delete filename;
