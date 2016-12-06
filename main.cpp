@@ -23,10 +23,10 @@ int main()
     int z = 4;            // Number of neighbours
     int N = pow(L, dim);  // Number of sites   
     int mcsteps = 1000;   // Number of Monte Carlo steps
-    int bins = 100;       // Number of bins
+    int bins = 10;       // Number of bins
     double J = 1;         // Strength of interaction
     double beta;          // Temperature/ Initializing beta
-    int Nbetas = 100;     // Number of different temperatures probed
+    int Nbetas = 20;     // Number of different temperatures probed
     double betamin = 0;   // Lowest temperature
     double betamax = 5;  // Highest temperature
     double s = 0.5;       // Size of spin
@@ -38,7 +38,8 @@ int main()
 
     // Opening a file to print to
     ofstream printFile;
-    string filenamePrefix = "beta0to5_Nbetas100__spin0p5_L15_J1_mcsteps1000_bins100";
+    //string filenamePrefix = "beta0to5_Nbetas100__spin0p5_L15_J1_mcsteps1000_bins100";
+    string filenamePrefix = "test";
     char *filename = new char[1000];                                    // File name can have max 1000 characters
     sprintf(filename, "%s_IsingMC.txt", filenamePrefix.c_str() ); // Create filename with prefix and ending
     printFile.open(filename);
@@ -90,7 +91,7 @@ int main()
     double drawn;
     double energy_new;
     double energy_change;
-    double energy_curr = -z*J*s*s*N;
+
 
     // Relevant quantities
     double m_average;    // Well, <m^2>, m is magnetization per site.
@@ -109,8 +110,9 @@ int main()
         {
             for(int j=0; j<L; j++)    state(i,j) = s; // All spins point up
         }
+        double energy_curr = -(z/2)*J*s*s*N;
 
-        // Equilibration procedure (Not sure I need this if the initial has all spins pointing up)
+        // Equilibration procedure
 
 
         for(int i=0; i<1000; i++)
@@ -162,9 +164,11 @@ int main()
         for(int l=0; l<bins; l++)
         {   // Loop over the bins
             msq_av_bin(l) = 0;
+            av_E(l) = 0;
+            av_Esq(l) = 0;
             for(int i=0; i<mcsteps; i++)
             {   // Loop over the Monte Carlo steps
-                // Traversing through the spins non-randomly
+                // Traversing through the spins randomly
                 for(int j=0; j<N;j++)
                 {
                     x = distribution2(generator2);
@@ -182,7 +186,6 @@ int main()
                     energy_change = 2*J*state(x,y)*(state(xm1,y) + state(x,ym1) + state(xp1,y) + state(x,yp1));
                     energy_new = energy_curr + energy_change;
 
-                    energy_new = energy_curr + energy_change;
                     if(energy_new <= energy_curr)
                     { // If the new energy is lower than the energy of the old, we commit the change
                         state(x,y) = -state(x,y); // Flip spin if the result is a state with lower energy.
@@ -224,6 +227,8 @@ int main()
             av_E(l)       = av_E(l)/mcsteps;
             av_Esq(l)     = av_Esq(l)/mcsteps;
 
+            //cout << av_E(l) << endl;
+
         }  // End of loop over bins. Index l out.
 
         // Magnetization
@@ -240,20 +245,23 @@ int main()
         for(int i=0; i<bins; i++)    blockvariance += (msq_av_bin(i)-m_average)*(msq_av_bin(i)-m_average);
         // Dividing
         blockvariance = blockvariance/(bins*(bins-1));
+        double block_stdv = sqrt(blockvariance);
 
         // Heat capacity
         E_average = 0;
         for(int i=0; i<bins; i++)    E_average += av_E(i);
         E_average = E_average/bins;
 
+
         Esq_average = 0;
         for(int i=0; i<bins; i++)    Esq_average += av_Esq(i);
         Esq_average = Esq_average/bins;
 
-        cv = 1/(beta*beta)*(Esq_average-E_average*E_average);
+        cv = beta*beta*(Esq_average-E_average*E_average);
 
         // Printing to file
-        printFile << beta << " " << m_average << " " << blockvariance << " " << cv << " " << E_average << " " << Esq_average << endl;
+        printFile << beta << " " << m_average << " " << block_stdv << " " << cv << " " << E_average << " " << Esq_average << endl;
+
 
     }  // End of loop over betas. Index n out.
     delete filename;
