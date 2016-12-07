@@ -34,7 +34,7 @@ int main()
 
     // Opening a file to print to
     ofstream printFile;
-    string filenamePrefix = "beta0to5_Nbetas100_spin0p5_L20_J1_mcsteps1000_bins100";
+    string filenamePrefix = "beta0to5_Nbetas100_spin0p5_L15_J1_mcsteps1000_bins100_cverrorattempt";
     //string filenamePrefix = "test";
     char *filename = new char[1000];                                    // File name can have max 1000 characters
     sprintf(filename, "%s_IsingMC.txt", filenamePrefix.c_str() ); // Create filename with prefix and ending
@@ -63,6 +63,10 @@ int main()
     // Energy squared
     vec av_Esq = zeros(bins);
     mat binholder_Esq = mat(bins, mcsteps);
+
+    // Heat capacity
+    vec av_c = zeros(bins);
+
 
 
     // Where should I put this?
@@ -156,8 +160,9 @@ int main()
         for(int l=0; l<bins; l++)
         {   // Loop over the bins
             msq_av_bin(l) = 0;
-            av_E(l) = 0;
-            av_Esq(l) = 0;
+            av_E(l)       = 0;
+            av_Esq(l)     = 0;
+            av_c(l)       = 0;
             for(int i=0; i<mcsteps; i++)
             {   // Loop over the Monte Carlo steps
                 // Traversing through the spins randomly
@@ -218,6 +223,7 @@ int main()
             msq_av_bin(l) = msq_av_bin(l)/mcsteps;
             av_E(l)       = av_E(l)/mcsteps;
             av_Esq(l)     = av_Esq(l)/mcsteps;
+            av_c(l)       = beta*beta*(av_Esq(l)-av_E(l)*av_E(l));
 
             //cout << av_E(l) << endl;
 
@@ -262,8 +268,18 @@ int main()
 
         cv = beta*beta*(Esq_average-E_average*E_average);
 
+        // Is this right?
+        double cv_average  = 0;
+        for(int i=0; i<bins; i++)    cv_average += av_c(i);
+        cv_average = cv_average/bins;
+
+        // Should I use cv_average or cv in the error estimation?
+        double cv_stdv = 0;
+        for(int i=0; i<bins; i++)    cv_stdv += (av_c(i)-cv_average)*(av_c(i)-cv_average);
+        cv_stdv = sqrt(cv_stdv/(bins*(bins-1)));
+
         // Printing to file
-        printFile << beta << " " << m_average << " " << block_stdv << " " << cv << " " << E_average << " " << Esq_average << " " << E_stdv << " " << Esq_stdv << endl;
+        printFile << beta << " " << m_average << " " << block_stdv << " " << cv << " " << E_average << " " << Esq_average << " " << E_stdv << " " << Esq_stdv << " " << cv_stdv << " " << cv_average << endl;
 
 
     }  // End of loop over betas. Index n out.
