@@ -23,23 +23,19 @@ int main()
     int z = 4;            // Number of neighbours
     int N = pow(L, dim);  // Number of sites   
     int mcsteps = 1000;   // Number of Monte Carlo steps
-    int bins = 10;       // Number of bins
+    int bins = 100;       // Number of bins
     double J = 1;         // Strength of interaction
     double beta;          // Temperature/ Initializing beta
-    int Nbetas = 20;     // Number of different temperatures probed
+    int Nbetas = 100;     // Number of different temperatures probed
     double betamin = 0;   // Lowest temperature
     double betamax = 5;  // Highest temperature
     double s = 0.5;       // Size of spin
-    // Initial state
-    /*
-    vector<double> state = vector<double>(N);  // Initializing the state vector
-    for(int i=0; i<N; i++)    state(i) = s; // All spins point up. Could choose something else, of course.
-    */
+
 
     // Opening a file to print to
     ofstream printFile;
-    //string filenamePrefix = "beta0to5_Nbetas100__spin0p5_L15_J1_mcsteps1000_bins100";
-    string filenamePrefix = "test";
+    string filenamePrefix = "beta0to5_Nbetas100_spin0p5_L20_J1_mcsteps1000_bins100";
+    //string filenamePrefix = "test";
     char *filename = new char[1000];                                    // File name can have max 1000 characters
     sprintf(filename, "%s_IsingMC.txt", filenamePrefix.c_str() ); // Create filename with prefix and ending
     printFile.open(filename);
@@ -51,10 +47,10 @@ int main()
 
 
     printFile << N << " " << s << " " << bins << endl;  // A line of data about the system at the top
+    allFile << N << " " << s << " " << bins << " " << Nbetas << " " << mcsteps << " " << betamin << " " << betamax << endl;  // A line of data about the system at the top
 
-    //run_Metropolis(L, dim, z, mcsteps, bins, J, beta, s, printFile);
 
-    vec betas = linspace(betamin, betamax, Nbetas);             // For simulate different temperatures
+    vec betas = linspace(betamin, betamax, Nbetas);             // For simulating different temperatures
 
     // Magnetization
     vec msq_av_bin = zeros(bins);
@@ -75,10 +71,6 @@ int main()
 
     std::default_random_engine generator2;
     std::uniform_int_distribution<int> distribution2(0,L-1);
-
-    // Should I have a vector for the energies? Or use bitwise operations? Probably easier?
-    // If I use bitwise operations, I could store one state in one element of a vector. But that is a lot of
-    // states. So no.
 
     // Quantities for determining system state
     int x;
@@ -116,7 +108,7 @@ int main()
 
 
         for(int i=0; i<1000; i++)
-        {  // Traversing through the spins non-randomly
+        {  // Traversing through the spins randomly
             for(int j=0; j<N; j++)
             {
                 x = distribution2(generator2);
@@ -247,20 +239,31 @@ int main()
         blockvariance = blockvariance/(bins*(bins-1));
         double block_stdv = sqrt(blockvariance);
 
-        // Heat capacity
+        // Energy and heat capacity
+        // Energy //
         E_average = 0;
         for(int i=0; i<bins; i++)    E_average += av_E(i);
         E_average = E_average/bins;
 
+        // Error in the energy //
+        double E_stdv = 0;
+        for(int i=0; i<bins; i++)    E_stdv += (av_E(i)-E_average)*(av_E(i)-E_average);
+        E_stdv = sqrt(E_stdv/(bins*(bins-1)));
 
+        // Energy squared //
         Esq_average = 0;
         for(int i=0; i<bins; i++)    Esq_average += av_Esq(i);
         Esq_average = Esq_average/bins;
 
+        // Error in the energy //
+        double Esq_stdv = 0;
+        for(int i=0; i<bins; i++)    Esq_stdv += (av_Esq(i)-Esq_average)*(av_Esq(i)-Esq_average);
+        Esq_stdv = sqrt(Esq_stdv/(bins*(bins-1)));
+
         cv = beta*beta*(Esq_average-E_average*E_average);
 
         // Printing to file
-        printFile << beta << " " << m_average << " " << block_stdv << " " << cv << " " << E_average << " " << Esq_average << endl;
+        printFile << beta << " " << m_average << " " << block_stdv << " " << cv << " " << E_average << " " << Esq_average << " " << E_stdv << " " << Esq_stdv << endl;
 
 
     }  // End of loop over betas. Index n out.
