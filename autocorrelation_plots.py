@@ -15,11 +15,16 @@ def autocorrelation_time(j, mcsteps, ms, plotbool='false'): # Want the option to
     A = zeros(len(dts))
     act = 0
     counter = 0
+    term1   = 0
+    #term2f1 = 0
+    #term2f2 = 0
     noofloops = upperlimiti*upperlimitdt
     for dt in dts:                                          # A(dt) for different dt                            
         for i in range(lowerlimiti,upperlimiti-dt):         # Choosing the spins in our bin
-            A[dt] += ms[i]*ms[i+dt]
-        A[dt] = A[dt]/(mcsteps-dt)                          # Dividing by the number of terms
+            term1 += ms[i]*ms[i+dt]
+            #term2f1 += ms[i]
+            #term2f2 += ms[i+dt]
+        A[dt] = term1/(mcsteps-dt) #- term2f1*term2f2/(mcsteps-dt)**2
         act += A[dt] 
  
     if plotbool=='true':                  # Just in case we want to plot.
@@ -113,23 +118,27 @@ for i in range(Nbeta):           # We want the integrated autocorrelation
     # Feeding the average value in
     mact_av = mact_av/bins
     macts[i] = mact_av
+    print macts[i]
     # Calculating the standard deviation  
     for k in range(bins):
         macts_std[i] += (macts_inbin[k]-mact_av)*(macts_inbin[k]-mact_av)
     macts_std[i] = macts_std[i]/(bins*(bins-1))
-    
 
-    
-    
 
 print "Done with finding the integrated autocorrelation times. Now plotting."
 # Doing the plotting thing
-# Not integrated
+figure()
+plot(betas, macts)
+title(r'Integrated autocorrelation time $\tau_{int}$ for magnetization')
+xlabel(r'$\beta$')
+ylabel(r'$\tau_{int}$')
+show()
+
 figure()
 errorbar(betas, macts, yerr=macts_std)
-title(r'Integrated autocorrelation time $\tau_{int}$ between magnetizations at temporal distance $\Delta\tau$')
-xlabel(r'$\Delta\tau$')
-ylabel(r'$A(\Delta\tau)$')
+title(r'Integrated autocorrelation time $\tau_{int}$ for magnetization')
+xlabel(r'$\beta$')
+ylabel(r'$\tau_{int}$')
 show()
 
 """
