@@ -14,15 +14,10 @@ def autocorrelation_time(j, mcsteps, ms, plotbool='false'): # Want the option to
     dts = range(0,upperlimitdt)
     A = zeros(len(dts))
     act = 0
-    for i in range(lowerlimiti,upperlimiti):     # Choosings the spins in our bin  
-        for dt in dts:                           # A(dt) for different dt 
-            a = 0 
-            counter = 0
-            while (i+dt)<upperlimiti:     # Cutting off when we reach the end of the bin           
-                A[dt] += ms[i]*ms[i+dt]   # Correlation between the spins in our bin
-                counter +=1               # Number of terms
-            A[dt] = A[dt]/counter         # Or drop the counter and divide by mcsteps-delta+1
-            act +=A[dt]
+    for dt in dts:                                          # A(dt) for different dt 
+        for i in range(j*mcsteps, (j+1)*mcsteps-dt):        # Choosing the spins in our bin 
+            A[dt] += ms[i]*ms[i+dt]
+        A[dt] = A[dt]/(mcsteps-dt)                          # Dividing by the number of terms
     
     if plotbool=='true':                  # Just in case we want to plot.
         figure()
@@ -38,7 +33,7 @@ def autocorrelation_time(j, mcsteps, ms, plotbool='false'): # Want the option to
 print "Opening file."
 ## Reading in the data ##
 # Open the file for reading
-infile = open("beta0to5_Nbetas100__spin0p5_L15_J1_mcsteps1000_bins100_IsingMC_all.txt", "r")
+infile = open("beta0to5_Nbetas100_spin0p5_L15_J1_mcsteps1000_bins100_cverrorattempt_IsingMC_all.txt", "r")
 
 readbool = 'false'
 if readbool == 'true':
@@ -100,15 +95,17 @@ macts_std = zeros(Nbeta)
 print "File closed and arrays for autocorrelation plots made. Now feeding in the correlation."
 
 counter = 0
+totalnumber = Nbeta*bins
 for i in range(Nbeta):
     # For each beta
     mact_av = 0                  # To find the average value
     macts_inbin = zeros(bins)    # For storing the standard deviation
     for j in range(bins):
         # Run over every bin
+        print "In loop", counter, " of ", totalnumber
         act = autocorrelation_time(counter, mcsteps, ms)     # Finding the integrated autocorrelation time
         mact_av += act
-        macts_inbin[j] = act   
+        macts_inbin[j] = act  
     # Feeding the average value in
     mact_av = mact_av/bins
     macts[i] = mact_av
@@ -116,6 +113,7 @@ for i in range(Nbeta):
     for k in range(bins):
         macts_std[i] += (macts_inbin[k]-mact_av)*(macts_inbin[k]-mact_av)
     macts_std[i] = macts_std/(bins*(bins-1))
+
     
     
 
@@ -165,3 +163,4 @@ xlabel(r'$\beta$')
 ylabel(r'$<E>$')
 show()
 """
+
