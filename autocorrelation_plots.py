@@ -14,11 +14,14 @@ def autocorrelation_time(j, mcsteps, ms, plotbool='false'): # Want the option to
     dts = range(0,upperlimitdt)
     A = zeros(len(dts))
     act = 0
-    for dt in dts:                                          # A(dt) for different dt 
-        for i in range(j*mcsteps, (j+1)*mcsteps-dt):        # Choosing the spins in our bin 
+    counter = 0
+    noofloops = upperlimiti*upperlimitdt
+    for dt in dts:                                          # A(dt) for different dt                            
+        for i in range(lowerlimiti,upperlimiti-dt):         # Choosing the spins in our bin
             A[dt] += ms[i]*ms[i+dt]
         A[dt] = A[dt]/(mcsteps-dt)                          # Dividing by the number of terms
-    
+        act += A[dt] 
+ 
     if plotbool=='true':                  # Just in case we want to plot.
         figure()
         plot(dts, A)
@@ -96,23 +99,25 @@ print "File closed and arrays for autocorrelation plots made. Now feeding in the
 
 counter = 0
 totalnumber = Nbeta*bins
-for i in range(Nbeta):
+for i in range(Nbeta):           # We want the integrated autocorrelation 
     # For each beta
     mact_av = 0                  # To find the average value
-    macts_inbin = zeros(bins)    # For storing the standard deviation
+    macts_inbin = zeros(bins)    # For finding the standard deviation
     for j in range(bins):
         # Run over every bin
-        print "In loop", counter, " of ", totalnumber
+        #print "In loop", counter, " of ", totalnumber
         act = autocorrelation_time(counter, mcsteps, ms)     # Finding the integrated autocorrelation time
         mact_av += act
-        macts_inbin[j] = act  
+        macts_inbin[j] = act
+        counter += 1
     # Feeding the average value in
     mact_av = mact_av/bins
     macts[i] = mact_av
     # Calculating the standard deviation  
     for k in range(bins):
         macts_std[i] += (macts_inbin[k]-mact_av)*(macts_inbin[k]-mact_av)
-    macts_std[i] = macts_std/(bins*(bins-1))
+    macts_std[i] = macts_std[i]/(bins*(bins-1))
+    
 
     
     
