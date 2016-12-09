@@ -5,7 +5,7 @@ import time
 import sys
 
 # Open the file for reading
-infile = open("beta0to5_Nbetas100_spin1_L15_J1_mcsteps1000_bins100_091216_1340_IsingMC.txt", "r")
+infile = open("beta0to5_Nbetas100_spin0p5_L15_J1_mcsteps1000_bins100_091216_1340_IsingMC.txt", "r")
 
 # The first line contains information about the system. We read that separately
 firstline = infile.readline() # Reads the first line only
@@ -51,7 +51,7 @@ for line in lines:
 infile.close()
 
 #infile = open("beta0to5_Nbetas100__spin0p5_L15_J1_mcsteps1000_bins100_IsingMC.txt", "r")
-infile = open("beta0to5_Nbetas100_spin1_L10_J1_mcsteps1000_bins100_091216_1340_IsingMC.txt", "r")
+infile = open("beta0to5_Nbetas100_spin0p5_L10_J1_mcsteps1000_bins100_091216_1340_IsingMC.txt", "r")
 
 # The first line contains information about the system. We read that separately
 firstline = infile.readline() # Reads the first line only
@@ -90,7 +90,7 @@ for line in lines:
 # Remember to close the file
 infile.close()
 
-infile = open("beta0to5_Nbetas100_spin1_L15_J1_mcsteps1000_bins100_091216_1340_IsingMC.txt", "r")
+infile = open("beta0to5_Nbetas100_spin0p5_L15_J1_mcsteps1000_bins100_091216_1340_IsingMC.txt", "r")
 
 # The first line contains information about the system. We read that separately
 firstline = infile.readline() # Reads the first line only
@@ -131,7 +131,7 @@ infile.close()
          
         
 
-infile = open("beta0to5_Nbetas100_spin1_L5_J1_mcsteps1000_bins100_091216_1340_IsingMC.txt", "r")
+infile = open("beta0to5_Nbetas100_spin0p5_L5_J1_mcsteps1000_bins100_091216_1340_IsingMC.txt", "r")
 
 # The first line contains information about the system. We read that separately
 firstline = infile.readline() # Reads the first line only
@@ -170,7 +170,7 @@ for line in lines:
 # Remember to close the file
 infile.close()    
 
-infile = open("beta0to5_Nbetas100_spin1_L4_J1_mcsteps1000_bins100_091216_1340_IsingMC.txt", "r")
+infile = open("beta0to5_Nbetas100_spin0p5_L4_J1_mcsteps1000_bins100_091216_1340_IsingMC.txt", "r")
 
 # The first line contains information about the system. We read that separately
 firstline = infile.readline() # Reads the first line only
@@ -210,7 +210,7 @@ for line in lines:
 infile.close()
 
 
-infile = open("beta0to5_Nbetas100_spin1_L3_J1_mcsteps1000_bins100_091216_1340_IsingMC.txt", "r")
+infile = open("beta0to5_Nbetas100_spin0p5_L3_J1_mcsteps1000_bins100_091216_1340_IsingMC.txt", "r")
 
 # The first line contains information about the system. We read that separately
 firstline = infile.readline() # Reads the first line only
@@ -250,7 +250,7 @@ for line in lines:
 infile.close()
 
 
-infile = open("beta0to5_Nbetas100_spin1_L2_J1_mcsteps1000_bins100_091216_1340_IsingMC.txt", "r")
+infile = open("beta0to5_Nbetas100_spin0p5_L2_J1_mcsteps1000_bins100_091216_1340_IsingMC.txt", "r")
 
 # The first line contains information about the system. We read that separately
 firstline = infile.readline() # Reads the first line only
@@ -291,27 +291,27 @@ infile.close()
 
 betas           = array(betas)
 m_avs20         = array(m_avs20)
-stdm20          = array(stdm20)
+stdms20          = array(stdms20)
 mquadravs20     = array(mquadravs20)
 mquadravs_std20 = array(mquadravs_std20)
 m_avs10         = array(m_avs10)
-stdm10          = array(stdm10)
+stdms10          = array(stdms10)
 mquadravs10     = array(mquadravs10)
 mquadravs_std10 = array(mquadravs_std10)
 m_avs5          = array(m_avs5)
-stdm5           = array(stdm5)
+stdms5           = array(stdms5)
 mquadravs5      = array(mquadravs5)
 mquadravs_std5  = array(mquadravs_std5)
 m_avs4          = array(m_avs4)
-stdm4           = array(stdm4)
+stdms4           = array(stdms4)
 mquadravs4      = array(mquadravs4)
 mquadravs_std4  = array(mquadravs_std4)
 m_avs3          = array(m_avs3)
-stdm3           = array(stdm3)
+stdms3           = array(stdms3)
 mquadravs3      = array(mquadravs3)
 mquadravs_std3  = array(mquadravs_std3)
 m_avs2          = array(m_avs2)
-stdm2           = array(stdm2)
+stdms2           = array(stdms2)
 mquadravs2      = array(mquadravs2)
 mquadravs_std2  = array(mquadravs_std2)
 
@@ -339,13 +339,13 @@ for i in range(length):
     UL4[i]  = 1 - mquadravs4[i]/(3*m_avs4[i]**2)
     UL3[i] = 1 - mquadravs3[i]/(3*m_avs3[i]**2)
     UL2[i] = 1 - mquadravs2[i]/(3*m_avs2[i]**2)
-    UL20delta[i] = UL20[i]*sqrt((mquadravs_std20[i]/mquadravs20[i])**2+(stdm20[i]/m_avs20[i])**2)
-    UL15delta[i] = UL15[i]*sqrt((mquadravs_std15[i]/mquadravs15[i])**2+(stdm15[i]/m_avs15[i])**2)
-    UL10delta[i] = UL10[i]*sqrt((mquadravs_std10[i]/mquadravs10[i])**2+(stdm10[i]/m_avs10[i])**2)
-    UL5delta[i] = UL5[i]*sqrt((mquadravs_std5[i]/mquadravs5[i])**2+(stdm5[i]/m_avs5[i])**2)
-    UL4delta[i] = UL4[i]*sqrt((mquadravs_std4[i]/mquadravs4[i])**2+(stdm4[i]/m_avs4[i])**2)
-    UL3delta[i] = UL3[i]*sqrt((mquadravs_std3[i]/mquadravs3[i])**2+(stdm3[i]/m_avs3[i])**2)
-    UL2delta[i] = UL2[i]*sqrt((mquadravs_std2[i]/mquadravs2[i])**2+(stdm2[i]/m_avs2[i])**2)
+    UL20delta[i] = UL20[i]*sqrt((mquadravs_std20[i]/mquadravs20[i])**2+(stdms20[i]/m_avs20[i])**2)
+    UL15delta[i] = UL15[i]*sqrt((mquadravs_std15[i]/mquadravs15[i])**2+(stdms15[i]/m_avs15[i])**2)
+    UL10delta[i] = UL10[i]*sqrt((mquadravs_std10[i]/mquadravs10[i])**2+(stdms10[i]/m_avs10[i])**2)
+    UL5delta[i] = UL5[i]*sqrt((mquadravs_std5[i]/mquadravs5[i])**2+(stdms5[i]/m_avs5[i])**2)
+    UL4delta[i] = UL4[i]*sqrt((mquadravs_std4[i]/mquadravs4[i])**2+(stdms4[i]/m_avs4[i])**2)
+    UL3delta[i] = UL3[i]*sqrt((mquadravs_std3[i]/mquadravs3[i])**2+(stdms3[i]/m_avs3[i])**2)
+    UL2delta[i] = UL2[i]*sqrt((mquadravs_std2[i]/mquadravs2[i])**2+(stdms2[i]/m_avs2[i])**2)
     
     
     
@@ -353,15 +353,31 @@ for i in range(length):
 #UL20 = 1 - mquadravs20/(3*m_av20**2)
 
 figure()
-errorbar(betas, UL2, yerr=UL2delta, label='L=2')
+plot(betas, UL3, label='L=3')
 hold('on')
-plot(betas, UL3, yerr=UL3delta, label='L=3')
-plot(betas, UL4, yerr=UL4delta, label='L=4')
-plot(betas, UL5, yerr=UL5delta, label='L=5')
-plot(betas, UL10, yerr=UL10delta, label='L=10')
-plot(betas, UL15, yerr=UL15delta, label='L=15')
-plot(betas, UL20, yerr=UL20delta, label='L=20')
+#errorbar(betas, UL2, yerr=UL2delta, label='L=2')
+plot(betas, UL4, label='L=4')
+plot(betas, UL5, label='L=5')
+plot(betas, UL10, label='L=10')
+plot(betas, UL15, label='L=15')
+plot(betas, UL20, label='L=20')
 title(r'The Binder cumulant vs temperature for different L')
 xlabel(r'$\beta$')
 ylabel(r'$U_L$')
+legend(loc="upper right")
+show()
+
+figure()
+errorbar(betas, UL3, yerr=UL3delta, label='L=3')
+hold('on')
+#errorbar(betas, UL2, yerr=UL2delta, label='L=2')
+errorbar(betas, UL4, yerr=UL4delta, label='L=4')
+errorbar(betas, UL5, yerr=UL5delta, label='L=5')
+errorbar(betas, UL10, yerr=UL10delta, label='L=10')
+errorbar(betas, UL15, yerr=UL15delta, label='L=15')
+errorbar(betas, UL20, yerr=UL20delta, label='L=20')
+title(r'The Binder cumulant vs temperature for different L')
+xlabel(r'$\beta$')
+ylabel(r'$U_L$')
+legend(loc="upper right")
 show()
