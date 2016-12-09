@@ -4,9 +4,6 @@ from matplotlib.pyplot import *
 import time
 import sys
 
-# Should divide into temperatures! Now we loose the information of autocorrelation time vs temp.
-# Function to find the autocorrelation time
-
 def autocorrelation_time(j, mcsteps, ms, plotbool='false'): # Want the option to plot
     lowerlimiti = j*mcsteps
     upperlimiti = (j+1)*mcsteps
@@ -15,16 +12,19 @@ def autocorrelation_time(j, mcsteps, ms, plotbool='false'): # Want the option to
     A = zeros(len(dts))
     act = 0
     counter = 0
-    term1   = 0
-    #term2f1 = 0
-    #term2f2 = 0
+    
     noofloops = upperlimiti*upperlimitdt
-    for dt in dts:                                          # A(dt) for different dt                            
+    for dt in dts:                                          # A(dt) for different dt
+        term1   = 0
+        term2f1 = 0
+        term2f2 = 0                        
         for i in range(lowerlimiti,upperlimiti-dt):         # Choosing the spins in our bin
             term1 += ms[i]*ms[i+dt]
-            #term2f1 += ms[i]
-            #term2f2 += ms[i+dt]
-        A[dt] = term1/(mcsteps-dt) #- term2f1*term2f2/(mcsteps-dt)**2
+            term2f1 += ms[i]
+            term2f2 += ms[i+dt]
+            #A[dt] += ms[i]*ms[i+dt]
+        A[dt] = A[dt]/(mcsteps-dt) - term2f1*term2f2/(mcsteps-dt)**2
+        print "dt = ", dt, "; A[dt] = ", A[dt]
         act += A[dt] 
  
     if plotbool=='true':                  # Just in case we want to plot.
@@ -141,40 +141,4 @@ xlabel(r'$\beta$')
 ylabel(r'$\tau_{int}$')
 show()
 
-"""
-figure()
-errorbar(betas, m_avs, yerr=blockvars)
-title('$<m>^2$ in the Ising model with error bars')
-xlabel(r'$\beta$')
-ylabel(r'$<m>^2$')
-show()
-
-figure()
-plot(betas, blockvars, 'r')
-title(r'Variance $\sigma_B$ of $<m>^2$ in the Ising model')
-xlabel(r'$\beta$')
-ylabel(r'$\sigma_B$')
-show()
-
-figure()
-plot(betas, cvs, 'r')
-title(r'Heat capacity $C_v$ in the Ising model')
-xlabel(r'$\beta$')
-ylabel(r'$C_v$')
-show()
-
-figure()
-plot(betas, eavs, 'r')
-title(r'Energy $<E>$ in the Ising model')
-xlabel(r'$\beta$')
-ylabel(r'$<E>$')
-show()
-
-figure()
-plot(betas, esqavs, 'r')
-title(r'$<E>^2$ in the Ising model')
-xlabel(r'$\beta$')
-ylabel(r'$<E>$')
-show()
-"""
 

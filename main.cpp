@@ -18,7 +18,7 @@ int main()
 {
     // Initialization //
     // System properties
-    int L = 15;           // Size of system
+    int L = 4;           // Size of system
     int dim = 2;          // Dimension of system
     int z = 4;            // Number of neighbours
     int N = pow(L, dim);  // Number of sites   
@@ -28,13 +28,13 @@ int main()
     double beta;          // Temperature/ Initializing beta
     int Nbetas = 100;     // Number of different temperatures probed
     double betamin = 0;   // Lowest temperature
-    double betamax = 5;  // Highest temperature
+    double betamax = 5;   // Highest temperature
     double s = 0.5;       // Size of spin
 
 
     // Opening a file to print to
     ofstream printFile;
-    string filenamePrefix = "beta0to5_Nbetas100_spin0p5_L15_J1_mcsteps1000_bins100_cverrorattempt";
+    string filenamePrefix = "beta0to5_Nbetas100_spin0p5_L4_J1_mcsteps1000_bins100_091216_1340";
     //string filenamePrefix = "test";
     char *filename = new char[1000];                                    // File name can have max 1000 characters
     sprintf(filename, "%s_IsingMC.txt", filenamePrefix.c_str() ); // Create filename with prefix and ending
@@ -47,7 +47,8 @@ int main()
 
 
     printFile << N << " " << s << " " << bins << endl;  // A line of data about the system at the top
-    allFile << N << " " << s << " " << bins << " " << Nbetas << " " << mcsteps << " " << betamin << " " << betamax << endl;  // A line of data about the system at the top
+    allFile << N << " " << s << " " << bins << " " << Nbetas << " " << mcsteps << " " << betamin << " ";
+    allFile << betamax << endl;  // A line of data about the system at the top
 
 
     vec betas = linspace(betamin, betamax, Nbetas);             // For simulating different temperatures
@@ -55,6 +56,11 @@ int main()
     // Magnetization
     vec msq_av_bin = zeros(bins);
     mat binholder_m = mat(bins,mcsteps);                        // Holds the values for each MC step.
+
+    // Magnetization**4
+    vec mquad_av_bin = zeros(bins);
+    mat binholder_mquad = mat(bins,mcsteps);                        // Holds the values for each MC step.
+
 
     // Energy
     vec av_E = zeros(bins);
@@ -90,10 +96,11 @@ int main()
 
 
     // Relevant quantities
-    double m_average;    // Well, <m^2>, m is magnetization per site.
-    double E_average;    // The energy for the total system.
-    double Esq_average;  // Squared energy for the total system.
-    double cv;           // Found by E_average and Esq_average.
+    double m_average;      // Well, <m>^2, m is magnetization per site.
+    double mquad_average;  // <m^4>, m is magnetization per site.
+    double E_average;      // The energy for the total system.
+    double Esq_average;    // Squared energy for the total system.
+    double cv;             // Found by E_average and Esq_average.
 
     for(int n=0; n<Nbetas; n++)
     {
@@ -159,10 +166,12 @@ int main()
         //double counter = 0;
         for(int l=0; l<bins; l++)
         {   // Loop over the bins
-            msq_av_bin(l) = 0;
-            av_E(l)       = 0;
-            av_Esq(l)     = 0;
-            av_c(l)       = 0;
+            msq_av_bin(l)   = 0;
+            mquad_av_bin(l) = 0;
+            av_E(l)         = 0;
+            av_Esq(l)       = 0;
+            av_c(l)         = 0;
+            mquad_average  = 0;
             for(int i=0; i<mcsteps; i++)
             {   // Loop over the Monte Carlo steps
                 // Traversing through the spins randomly
@@ -201,14 +210,21 @@ int main()
                 } // End loop over j. N lattice points have been traversed over
                 //Commands to find quantity
                 m = 0;    // Resetting for this run
+                double mquad = 0;
                 for(int a=0; a<L; a++)
                 {
-                    for(int b=0; b<L; b++)    m += state(a,b);
+                    for(int b=0; b<L; b++)            m += state(a,b);
                 }  // Finding the desired quantity
 
-                double yo = m*m/(N*N); // Man gave name to all the quantities. In the beginning. In the beginning.
-                msq_av_bin(l) += yo;   // Accumulating the average for bin l
-                binholder_m(l,i)= yo;  // Save each value of m grouped by bin.
+                double mq = m*m/(N*N); // Man gave name to all the quantities. In the beginning. In the beginning.
+                msq_av_bin(l) += mq;   // Accumulating the average for bin l
+                binholder_m(l,i)= mq;  // Save each value of m grouped by bin.
+
+                mquad = mq*mq;
+                //cout << "mquad: " << mquad << endl;
+
+                mquad_av_bin(l) += mquad;               // Accumulating the average for bin l
+                binholder_mquad(l,i)= mquad;            // Save each value of mquad grouped by bin.
 
                 av_E(l) += energy_curr;
                 binholder_E(l,i) = energy_curr;
@@ -220,7 +236,8 @@ int main()
 
             }  // End of Monte Carlo steps. Index i out.
             // Dividing by the number of configurations to get the average for bin l
-            msq_av_bin(l) = msq_av_bin(l)/mcsteps;
+            msq_av_bin(l)   = msq_av_bin(l)/mcsteps;
+            mquad_av_bin(l) = mquad_av_bin(l)/mcsteps;
             av_E(l)       = av_E(l)/mcsteps;
             av_Esq(l)     = av_Esq(l)/mcsteps;
             av_c(l)       = beta*beta*(av_Esq(l)-av_E(l)*av_E(l));
@@ -235,6 +252,12 @@ int main()
         for(int i=0; i<bins; i++)    m_average += msq_av_bin(i);
         m_average = m_average/bins;
 
+        mquad_average = 0;
+        for(int i=0; i<bins; i++)    mquad_average += mquad_av_bin(i);
+        mquad_average = mquad_average/bins;
+
+        //cout << "mquad_average: " << mquad_average << endl;
+
         // Use this:
         // What the others seem to be suggesting (Formula from Kosovan and Sega)
         // This is quite similar to the variance...
@@ -244,6 +267,13 @@ int main()
         // Dividing
         blockvariance = blockvariance/(bins*(bins-1));
         double block_stdv = sqrt(blockvariance);
+
+        double mquad_variance = 0;
+        // Accumulating
+        for(int i=0; i<bins; i++)    mquad_variance += (mquad_av_bin(i)-mquad_average)*(mquad_av_bin(i)-mquad_average);
+        // Dividing
+        mquad_variance = mquad_variance/(bins*(bins-1));
+        double mquad_stdv = sqrt(mquad_stdv);
 
         // Energy and heat capacity
         // Energy //
@@ -279,7 +309,9 @@ int main()
         cv_stdv = sqrt(cv_stdv/(bins*(bins-1)));
 
         // Printing to file
-        printFile << beta << " " << m_average << " " << block_stdv << " " << cv << " " << E_average << " " << Esq_average << " " << E_stdv << " " << Esq_stdv << " " << cv_stdv << " " << cv_average << endl;
+        printFile << beta << " " << m_average << " " << block_stdv << " " << cv << " " << E_average;
+        printFile << " " << Esq_average << " " << E_stdv << " " << Esq_stdv << " " << cv_stdv << " ";
+        printFile << cv_average << " " << mquad_average << " " << mquad_stdv << endl;
 
 
     }  // End of loop over betas. Index n out.
