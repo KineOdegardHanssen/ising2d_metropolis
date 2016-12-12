@@ -4,13 +4,12 @@ from matplotlib.pyplot import *
 import time
 import sys
 
-def autocorrelation_time(j, mcsteps, ms, plotbool='false'): # Want the option to plot
-    lowerlimiti = j*mcsteps
-    upperlimiti = (j+1)*mcsteps
-    upperlimitdt = int(floor(0.1*mcsteps))    
+def autocorrelation_time(j, mcsteps, bins, ms, plotbool='false'): # Want the option to plot
+    lowerlimiti = j*mcsteps*bins
+    upperlimiti = (j+1)*mcsteps*bins
+    upperlimitdt = int(floor(0.01*mcsteps*N))                      # Do I really want this large a limit?
     dts = range(0,upperlimitdt)
     A = zeros(len(dts))
-    #A2 = zeros(len(dts))
     act = 0
     counter = 0
     noofloops = upperlimiti*upperlimitdt
@@ -22,21 +21,18 @@ def autocorrelation_time(j, mcsteps, ms, plotbool='false'): # Want the option to
             term1 += ms[i]*ms[i+dt]
             term2f1 += ms[i]
             term2f2 += ms[i+dt]
-        A[dt] = term1/(mcsteps-dt) - term2f1*term2f2/(mcsteps-dt)**2
-        #A2[dt] = term1/(mcsteps-dt) 
-        #print "dt = ", dt, "A[dt] = ", A[dt]
+        A[dt] = term1/(mcsteps*bins-dt) - term2f1*term2f2/(mcsteps*bins-dt)**2
         act += A[dt] 
-        #act2 += A2[dt]
  
     if plotbool=='true':                  # Just in case we want to plot.
         figure()
         plot(dts, A)
-        title('Unintegrated autocorrelation time')
+        title('Unintegrated autocorrelation time, unnormalize')
         xlabel(r'$\Delta\tau$')
         ylabel('A')
         show()
         
-    return act #, act2
+    return act
         
 
 print "Opening file."
@@ -97,51 +93,22 @@ infile.close()
 betas = linspace(betamin, betamax, Nbeta)      # Beta array
 macts = zeros(Nbeta)                           # Autocorrelation time array 
 macts_std = zeros(Nbeta)                       
-macts2 = zeros(Nbeta)                           # Autocorrelation time array 
+macts2 = zeros(Nbeta)                          # Autocorrelation time array 
 macts_std2 = zeros(Nbeta)           
 
 # Finding A[0] to divide by
 
-counter = 0
 A0 = 0
-for i in range(bins):
-    act = autocorrelation_time(counter, mcsteps, ms, plotbool='true')
-    A0 += act
-A0 = A0/bins       
+act = autocorrelation_time(0, mcsteps, bins, ms)
+A0 = act    
  
-
 print "File closed and arrays for autocorrelation plots made. Now feeding in the correlation."
 
-counter = 0
 totalnumber = Nbeta*bins
-for i in range(Nbeta):           # We want the integrated autocorrelation 
-    # For each beta
-    mact_av = 0                  # To find the average value
-    macts_inbin = zeros(bins)    # For finding the standard deviation
-    mact_av2 = 0                  # To find the average value
-    macts_inbin2 = zeros(bins)    # For finding the standard deviation
-    for j in range(bins):
-        # Run over every bin
-        #print "In loop", counter, " of ", totalnumber
-        act = autocorrelation_time(counter, mcsteps, ms)  # , act2   # Finding the integrated autocorrelation time
-        mact_av += act                        # I don't divide by A0 here to save computation time. Python is slow.
-        macts_inbin[j] = act/A0
-        #mact_av2 += act2
-        #macts_inbin2[j] = act2
-        counter += 1
-    # Feeding the average value in
-    mact_av = mact_av/(bins*A0)               # I divide here instead
-    macts[i] = mact_av
-    #mact_av2 = mact_av2/bins
-    #macts2[i] = mact_av2
-    #print macts[i]
-    # Calculating the standard deviation  
-    for k in range(bins):
-        macts_std[i] += (macts_inbin[k]-mact_av)*(macts_inbin[k]-mact_av)
-        #macts_std2[i] += (macts_inbin2[k]-mact_av2)*(macts_inbin2[k]-mact_av2)
-    macts_std[i] = macts_std[i]/(bins*(bins-1))
-    #macts_std2[i] = macts_std2[i]/(bins*(bins-1))
-
+for i in range(Nbeta):                                # We want the integrated autocorrelation for each beta
+    print "i = ", i
+    act = autocorrelation_time(i, mcsteps, bins, ms)  # Finding the integrated autocorrelation time
+    macts[i] = act/A0
 
 print "Done with finding the integrated autocorrelation times. Now plotting."
 # Doing the plotting thing
@@ -151,28 +118,4 @@ title(r'Integrated autocorrelation time $\tau_{int}$ for magnetization')
 xlabel(r'$\beta$')
 ylabel(r'$\tau_{int}$')
 show()
-
-figure()
-errorbar(betas, macts, yerr=macts_std)
-title(r'Integrated autocorrelation time $\tau_{int}$ for magnetization')
-xlabel(r'$\beta$')
-ylabel(r'$\tau_{int}$')
-show()
-
-"""
-figure()
-plot(betas, macts2)
-title(r'Integrated autocorrelation time $\tau_{int}$ for magnetization')
-xlabel(r'$\beta$')
-ylabel(r'$\tau_{int}$')
-show()
-
-figure()
-errorbar(betas, macts2, yerr=macts_std2)
-title(r'Integrated autocorrelation time $\tau_{int}$ for magnetization')
-xlabel(r'$\beta$')
-ylabel(r'$\tau_{int}$')
-show()
-"""
-
 
