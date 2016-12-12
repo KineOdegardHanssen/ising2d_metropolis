@@ -5,16 +5,24 @@ import time
 import sys
 
 def autocorrelation_time(j, mcsteps, ms, plotbool='false'): # Want the option to plot
+    tmax = mcsteps
     lowerlimiti = j*mcsteps
     upperlimiti = (j+1)*mcsteps
     upperlimitdt = int(floor(0.1*mcsteps))    
     dts = range(0,upperlimitdt)
     A = zeros(len(dts))
-    #A2 = zeros(len(dts))
-    act = 0
+    # Finding A[0] for accumulating act
+    term1 = 0
+    term2 = 0
+    for i in range(lowerlimiti, upperlimiti):
+        term1 += ms[i]*ms[i]
+        term2 += ms[i]
+    A0 = 1/tmax*term1 - 1/(tmax*tmax)*term2*term2
+    A[0] = 1    # Normalized by A0
+    act =  1
     counter = 0
     noofloops = upperlimiti*upperlimitdt
-    for dt in dts:                                          # A(dt) for different dt 
+    for dt in range(1, upperlimitdt):                       # A(dt) for different dt 
         term1   = 0
         term2f1 = 0
         term2f2 = 0               
@@ -23,10 +31,7 @@ def autocorrelation_time(j, mcsteps, ms, plotbool='false'): # Want the option to
             term2f1 += ms[i]
             term2f2 += ms[i+dt]
         A[dt] = term1/(mcsteps-dt) - term2f1*term2f2/(mcsteps-dt)**2
-        #A2[dt] = term1/(mcsteps-dt) 
-        #print "dt = ", dt, "A[dt] = ", A[dt]
         act += A[dt] 
-        #act2 += A2[dt]
  
     if plotbool=='true':                  # Just in case we want to plot.
         figure()
@@ -36,7 +41,7 @@ def autocorrelation_time(j, mcsteps, ms, plotbool='false'): # Want the option to
         ylabel('A')
         show()
         
-    return act #, act2
+    return act
         
 
 print "Opening file."
@@ -98,16 +103,7 @@ betas = linspace(betamin, betamax, Nbeta)      # Beta array
 macts = zeros(Nbeta)                           # Autocorrelation time array 
 macts_std = zeros(Nbeta)                       
 macts2 = zeros(Nbeta)                           # Autocorrelation time array 
-macts_std2 = zeros(Nbeta)           
-
-# Finding A[0] to divide by
-
-counter = 0
-A0 = 0
-for i in range(bins):
-    act = autocorrelation_time(counter, mcsteps, ms, plotbool='true')
-    A0 += act
-A0 = A0/bins       
+macts_std2 = zeros(Nbeta)              
  
 
 print "File closed and arrays for autocorrelation plots made. Now feeding in the correlation."
@@ -122,25 +118,17 @@ for i in range(Nbeta):           # We want the integrated autocorrelation
     macts_inbin2 = zeros(bins)    # For finding the standard deviation
     for j in range(bins):
         # Run over every bin
-        #print "In loop", counter, " of ", totalnumber
-        act = autocorrelation_time(counter, mcsteps, ms)  # , act2   # Finding the integrated autocorrelation time
-        mact_av += act                        # I don't divide by A0 here to save computation time. Python is slow.
-        macts_inbin[j] = act/A0
-        #mact_av2 += act2
-        #macts_inbin2[j] = act2
+        act = autocorrelation_time(counter, mcsteps, ms)  # Finding the integrated autocorrelation time
+        mact_av += act
+        macts_inbin[j] = act
         counter += 1
     # Feeding the average value in
-    mact_av = mact_av/(bins*A0)               # I divide here instead
+    mact_av = mact_av/bins
     macts[i] = mact_av
-    #mact_av2 = mact_av2/bins
-    #macts2[i] = mact_av2
-    #print macts[i]
     # Calculating the standard deviation  
     for k in range(bins):
         macts_std[i] += (macts_inbin[k]-mact_av)*(macts_inbin[k]-mact_av)
-        #macts_std2[i] += (macts_inbin2[k]-mact_av2)*(macts_inbin2[k]-mact_av2)
     macts_std[i] = macts_std[i]/(bins*(bins-1))
-    #macts_std2[i] = macts_std2[i]/(bins*(bins-1))
 
 
 print "Done with finding the integrated autocorrelation times. Now plotting."
@@ -158,21 +146,5 @@ title(r'Integrated autocorrelation time $\tau_{int}$ for magnetization')
 xlabel(r'$\beta$')
 ylabel(r'$\tau_{int}$')
 show()
-
-"""
-figure()
-plot(betas, macts2)
-title(r'Integrated autocorrelation time $\tau_{int}$ for magnetization')
-xlabel(r'$\beta$')
-ylabel(r'$\tau_{int}$')
-show()
-
-figure()
-errorbar(betas, macts2, yerr=macts_std2)
-title(r'Integrated autocorrelation time $\tau_{int}$ for magnetization')
-xlabel(r'$\beta$')
-ylabel(r'$\tau_{int}$')
-show()
-"""
 
 

@@ -5,15 +5,24 @@ import time
 import sys
 
 def autocorrelation_time(j, mcsteps, bins, ms, plotbool='false'): # Want the option to plot
+    tmax = mcsteps*bins
     lowerlimiti = j*mcsteps*bins
     upperlimiti = (j+1)*mcsteps*bins
     upperlimitdt = int(floor(0.01*mcsteps*N))                      # Do I really want this large a limit?
     dts = range(0,upperlimitdt)
     A = zeros(len(dts))
-    act = 0
+    # Finding A[0] for accumulating act
+    term1 = 0
+    term2 = 0
+    for i in range(lowerlimiti, upperlimiti):
+        term1 += ms[i]*ms[i]
+        term2 += ms[i]
+    A0 = 1/tmax*term1 - 1/(tmax*tmax)*term2*term2
+    A[0] = 1    # Normalized by A0
+    act =  1    # Accumulating values for integrated autocorrelation time
     counter = 0
     noofloops = upperlimiti*upperlimitdt
-    for dt in dts:                                          # A(dt) for different dt 
+    for dt in range(1, upperlimitdt):                       # A(dt) for different dt 
         term1   = 0
         term2f1 = 0
         term2f2 = 0               
@@ -96,19 +105,13 @@ macts_std = zeros(Nbeta)
 macts2 = zeros(Nbeta)                          # Autocorrelation time array 
 macts_std2 = zeros(Nbeta)           
 
-# Finding A[0] to divide by
-
-A0 = 0
-act = autocorrelation_time(0, mcsteps, bins, ms)
-A0 = act    
- 
 print "File closed and arrays for autocorrelation plots made. Now feeding in the correlation."
 
 totalnumber = Nbeta*bins
 for i in range(Nbeta):                                # We want the integrated autocorrelation for each beta
     print "i = ", i
     act = autocorrelation_time(i, mcsteps, bins, ms)  # Finding the integrated autocorrelation time
-    macts[i] = act/A0
+    macts[i] = act
 
 print "Done with finding the integrated autocorrelation times. Now plotting."
 # Doing the plotting thing
