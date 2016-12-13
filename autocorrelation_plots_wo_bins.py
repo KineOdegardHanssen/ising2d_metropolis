@@ -6,9 +6,9 @@ import sys
 
 def autocorrelation_time(j, mcsteps, bins, ms, plotbool='false'): # Want the option to plot
     tmax = mcsteps*bins
-    lowerlimiti = j*mcsteps*bins
-    upperlimiti = (j+1)*mcsteps*bins
-    upperlimitdt = int(floor(0.01*mcsteps*N))                      # Do I really want this large a limit?
+    lowerlimiti = j*tmax
+    upperlimiti = (j+1)*tmax
+    upperlimitdt = 10000 # Just like it was in the book #Or: int(floor(0.01*mcsteps*N))# Do I really want this large a limit?  
     dts = range(0,upperlimitdt)
     A = zeros(len(dts))
     # Finding A[0] for accumulating act
@@ -17,9 +17,9 @@ def autocorrelation_time(j, mcsteps, bins, ms, plotbool='false'): # Want the opt
     for i in range(lowerlimiti, upperlimiti):
         term1 += ms[i]*ms[i]
         term2 += ms[i]
-    A0 = 1/tmax*term1 - 1/(tmax*tmax)*term2*term2
+    A0 = term1/tmax - term2*term2/(tmax*tmax)
     A[0] = 1    # Normalized by A0
-    act =  1    # Accumulating values for integrated autocorrelation time
+    act =  1
     counter = 0
     noofloops = upperlimiti*upperlimitdt
     for dt in range(1, upperlimitdt):                       # A(dt) for different dt 
@@ -30,13 +30,13 @@ def autocorrelation_time(j, mcsteps, bins, ms, plotbool='false'): # Want the opt
             term1 += ms[i]*ms[i+dt]
             term2f1 += ms[i]
             term2f2 += ms[i+dt]
-        A[dt] = term1/(mcsteps*bins-dt) - term2f1*term2f2/(mcsteps*bins-dt)**2
+        A[dt] = (term1/(tmax-dt) - term2f1*term2f2/(tmax-dt)**2)/A0
         act += A[dt] 
  
     if plotbool=='true':                  # Just in case we want to plot.
         figure()
         plot(dts, A)
-        title('Unintegrated autocorrelation time, unnormalize')
+        title('Time-displaced autocorrelation function')
         xlabel(r'$\Delta\tau$')
         ylabel('A')
         show()
@@ -103,7 +103,13 @@ betas = linspace(betamin, betamax, Nbeta)      # Beta array
 macts = zeros(Nbeta)                           # Autocorrelation time array 
 macts_std = zeros(Nbeta)                       
 macts2 = zeros(Nbeta)                          # Autocorrelation time array 
-macts_std2 = zeros(Nbeta)           
+macts_std2 = zeros(Nbeta)
+
+"""
+act = autocorrelation_time(0, mcsteps, bins, ms, plotbool='true')
+print betas[35]
+act = autocorrelation_time(35, mcsteps, bins, ms, plotbool='true')
+"""           
 
 print "File closed and arrays for autocorrelation plots made. Now feeding in the correlation."
 

@@ -6,9 +6,9 @@ import sys
 
 def autocorrelation_time(j, mcsteps, ms, plotbool='false'): # Want the option to plot
     tmax = mcsteps
-    lowerlimiti = j*mcsteps
-    upperlimiti = (j+1)*mcsteps
-    upperlimitdt = int(floor(0.1*mcsteps))    
+    lowerlimiti = j*tmax
+    upperlimiti = (j+1)*tmax
+    upperlimitdt = 100 #int(floor(0.1*mcsteps))    
     dts = range(0,upperlimitdt)
     A = zeros(len(dts))
     # Finding A[0] for accumulating act
@@ -17,7 +17,7 @@ def autocorrelation_time(j, mcsteps, ms, plotbool='false'): # Want the option to
     for i in range(lowerlimiti, upperlimiti):
         term1 += ms[i]*ms[i]
         term2 += ms[i]
-    A0 = 1/tmax*term1 - 1/(tmax*tmax)*term2*term2
+    A0 = term1/tmax - term2*term2/(tmax*tmax)
     A[0] = 1    # Normalized by A0
     act =  1
     counter = 0
@@ -30,7 +30,7 @@ def autocorrelation_time(j, mcsteps, ms, plotbool='false'): # Want the option to
             term1 += ms[i]*ms[i+dt]
             term2f1 += ms[i]
             term2f2 += ms[i+dt]
-        A[dt] = term1/(mcsteps-dt) - term2f1*term2f2/(mcsteps-dt)**2
+        A[dt] = (term1/(tmax-dt) - term2f1*term2f2/(tmax-dt)**2)/A0
         act += A[dt] 
  
     if plotbool=='true':                  # Just in case we want to plot.
@@ -105,6 +105,9 @@ macts_std = zeros(Nbeta)
 macts2 = zeros(Nbeta)                           # Autocorrelation time array 
 macts_std2 = zeros(Nbeta)              
  
+act = autocorrelation_time(0, mcsteps, ms, plotbool='true')
+print betas[35]
+act = autocorrelation_time(35*bins, mcsteps, ms, plotbool='true')
 
 print "File closed and arrays for autocorrelation plots made. Now feeding in the correlation."
 
