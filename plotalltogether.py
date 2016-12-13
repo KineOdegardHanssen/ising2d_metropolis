@@ -23,6 +23,8 @@ m_avs20   = []          # Average m over all bins and mcsteps, listed according 
 stdms20   = []          # Average m over all bins and mcsteps, listed according to beta value
 eavs20     = []
 eavs_std20 = []
+cvs20      = []
+#cv_avfromblocks_std20 = []
 
 # Read the rest of the lines
 lines = infile.readlines()  # This works, I have checked it
@@ -41,8 +43,8 @@ for line in lines:
         stdm20 = float(words[2])
         stdms20.append(stdm20)
         # cvs
-        #cv = float(words[3])
-        #cvs.append(cv)
+        cv = float(words[3])
+        cvs20.append(cv)
         # eavs
         eav = float(words[4])/400.0
         eavs20.append(eav)
@@ -54,7 +56,10 @@ for line in lines:
         eavs_std20.append(eav_std)
         # esqavs_std
         #esqav_std = float(words[7])
-        #esqavs_std.append(esqav_std) # Not sure I want these   
+        #esqavs_std.append(esqav_std) # Not sure I want these 
+        # cv_avfromblocks_std
+        #cvblock_std = float(words[8])
+        #cv_avfromblocks_std20.append(cvblock_std)  
         
  
 # Remember to close the file
@@ -72,6 +77,8 @@ m_avs10 = []          # Average m over all bins and mcsteps, listed according to
 stdms10 = []          # Average m over all bins and mcsteps, listed according to beta value
 eavs10     = []
 eavs_std10 = []
+cvs10      = []
+#cv_avfromblocks_std10 = []
 
 # Read the rest of the lines
 lines = infile.readlines()  
@@ -86,6 +93,9 @@ for line in lines:
         # blockvars
         stdm10 = float(words[2])
         stdms10.append(stdm10)
+        # cvs
+        cv = float(words[3])
+        cvs10.append(cv)
         # eavs
         eav = float(words[4])/100.0
         eavs10.append(eav)
@@ -97,7 +107,9 @@ for line in lines:
         eavs_std10.append(eav_std)
         # esqavs_std
         #esqav_std = float(words[7])
-        #esqavs_std.append(esqav_std) # Not sure I want these   
+        #esqavs_std.append(esqav_std) # Not sure I want these 
+        #cvblock_std = float(words[8])
+        #cv_avfromblocks_std10.append(cvblock_std)    
         
         
 # Remember to close the file
@@ -115,6 +127,7 @@ m_avs2 = []          # Average m over all bins and mcsteps, listed according to 
 stdms2 = []          # Average m over all bins and mcsteps, listed according to beta value
 eavs2     = []
 eavs_std2 = []
+cvs2      = []
 
 # Read the rest of the lines
 lines = infile.readlines()  
@@ -129,6 +142,9 @@ for line in lines:
         # blockvars
         stdm2 = float(words[2])
         stdms2.append(stdm2)
+        # cvs
+        cv = float(words[3])
+        cvs2.append(cv)
         # eavs
         eav = float(words[4])/4.0
         eavs2.append(eav)
@@ -141,6 +157,8 @@ for line in lines:
         # esqavs_std
         #esqav_std = float(words[7])
         #esqavs_std.append(esqav_std) # Not sure I want these   
+        #cvblock_std = float(words[8])
+        #cv_avfromblocks_std2.append(cvblock_std)  
         
         
 # Remember to close the file
@@ -158,7 +176,8 @@ m_avs15 = []          # Average m over all bins and mcsteps, listed according to
 stdms15 = []          # Average m over all bins and mcsteps, listed according to beta value
 eavs15     = []
 eavs_std15 = []
-
+cvs15      = []
+#cv_avfromblocks_std15 = []
 # Read the rest of the lines
 lines = infile.readlines()  
 
@@ -172,6 +191,9 @@ for line in lines:
         # blockvars
         stdm15 = float(words[2])
         stdms15.append(stdm15)
+        # cvs
+        cv = float(words[3])
+        cvs15.append(cv)
         # eavs
         eav = float(words[4])/225.0
         eavs15.append(eav)
@@ -184,6 +206,8 @@ for line in lines:
         # esqavs_std
         #esqav_std = float(words[7])
         #esqavs_std.append(esqav_std) # Not sure I want these   
+        #cvblock_std = float(words[8])
+        #cv_avfromblocks_std15.append(cvblock_std)  
         
         
 # Remember to close the file
@@ -202,6 +226,8 @@ m_avs5 = []          # Average m over all bins and mcsteps, listed according to 
 stdms5 = []          # Average m over all bins and mcsteps, listed according to beta value
 eavs5     = []
 eavs_std5 = []
+cvs5      = []
+cv_avfromblocks_std5 = []
 
 # Read the rest of the lines
 lines = infile.readlines()  
@@ -216,6 +242,9 @@ for line in lines:
         # blockvars
         stdm5 = float(words[2])
         stdms5.append(stdm5)
+        # cvs
+        cv = float(words[3])
+        cvs5.append(cv)
         # eavs
         eav = float(words[4])/25.0
         eavs5.append(eav)
@@ -227,7 +256,10 @@ for line in lines:
         eavs_std5.append(eav_std)
         # esqavs_std
         #esqav_std = float(words[7])
-        #esqavs_std.append(esqav_std) # Not sure I want these   
+        #esqavs_std.append(esqav_std) # Not sure I want these 
+        #cvblock_std = float(words[8])
+        #cv_avfromblocks_std5.append(cvblock_std)  
+          
         
         
 # Remember to close the file
@@ -245,6 +277,8 @@ m_avs3 = []          # Average m over all bins and mcsteps, listed according to 
 stdms3 = []          # Average m over all bins and mcsteps, listed according to beta value
 eavs3     = []
 eavs_std3 = []
+cvs3      = []
+#cv_avfromblocks_std3 = []
 
 # Read the rest of the lines
 lines = infile.readlines()  
@@ -259,6 +293,9 @@ for line in lines:
         # blockvars
         stdm3 = float(words[2])
         stdms3.append(stdm3)
+        # cvs
+        cv = float(words[3])
+        cvs3.append(cv)
         # eavs
         eav = float(words[4])/9.0
         eavs3.append(eav)
@@ -270,7 +307,9 @@ for line in lines:
         eavs_std3.append(eav_std)
         # esqavs_std
         #esqav_std = float(words[7])
-        #esqavs_std.append(esqav_std) # Not sure I want these   
+        #esqavs_std.append(esqav_std) # Not sure I want these 
+        #cvblock_std = float(words[8])
+        #cv_avfromblocks_std3.append(cvblock_std)    
         
         
 # Remember to close the file
@@ -288,6 +327,8 @@ m_avs4 = []          # Average m over all bins and mcsteps, listed according to 
 stdms4 = []          # Average m over all bins and mcsteps, listed according to beta value
 eavs4     = []
 eavs_std4 = []
+cvs4      = []
+#cv_avfromblocks_std4 = []
 
 # Read the rest of the lines
 lines = infile.readlines()  
@@ -302,6 +343,9 @@ for line in lines:
         # blockvars
         stdm4 = float(words[2])
         stdms4.append(stdm4)
+        # cvs
+        cv = float(words[3])
+        cvs4.append(cv)
         # eavs
         eav = float(words[4])/16.0
         eavs4.append(eav)
@@ -314,6 +358,8 @@ for line in lines:
         # esqavs_std
         #esqav_std = float(words[7])
         #esqavs_std.append(esqav_std) # Not sure I want these   
+        #cvblock_std = float(words[8])
+        #cv_avfromblocks_std4.append(cvblock_std)  
         
         
 # Remember to close the file
@@ -350,6 +396,20 @@ eavs15     = array(eavs15)
 eavs_std15 = array(eavs_std15)
 eavs20     = array(eavs20)
 eavs_std20 = array(eavs_std20)
+cvs20      = array(cvs20)
+#cv_avfromblocks_std20 = array(cv_avfromblocks_std20)
+cvs15      = array(cvs15)
+#cv_avfromblocks_std15 = array(cv_avfromblocks_std15)
+cvs10      = array(cvs10)
+#cv_avfromblocks_std10 = array(cv_avfromblocks_std10)
+cvs5      = array(cvs5)
+#cv_avfromblocks_std5 = array(cv_avfromblocks_std5)
+cvs4      = array(cvs4)
+#cv_avfromblocks_std4 = array(cv_avfromblocks_std4)
+cvs3      = array(cvs3)
+#cv_avfromblocks_std3 = array(cv_avfromblocks_std3)
+cvs2      = array(cvs2)
+#cv_avfromblocks_std2 = array(cv_avfromblocks_std2)
 """
 cvs = array(cvs)
 eavs = array(eavs)
@@ -417,6 +477,75 @@ xlabel(r'$\beta$')
 ylabel(r'$<E>$')
 legend(loc="upper right")
 show()
+
+figure()
+plot(betas, cvs2, label='L=2')
+hold('on')
+plot(betas, cvs3, label='L=3')
+plot(betas, cvs4, label='L=4')
+plot(betas, cvs5, label='L=5')
+plot(betas, cvs10, label='L=10')
+plot(betas, cvs15, label='L=15')
+plot(betas, cvs20, label='L=20')
+title(r'Total heat capacity $C_V$ in the Ising model for different L')
+xlabel(r'$\beta$')
+ylabel(r'$C_V$')
+legend(loc="upper right")
+show()
+
+'''
+figure()
+plot(betas, cvs2)
+hold('on')
+title(r'Total heat capacity $C_V$ in the Ising model for L=2')
+xlabel(r'$\beta$')
+ylabel(r'$C_V$')
+show()
+
+figure()
+plot(betas, cvs3)
+title(r'Total heat capacity $C_V$ in the Ising model for L=3')
+xlabel(r'$\beta$')
+ylabel(r'$C_V$')
+show()
+
+figure()
+plot(betas, cvs4)
+title(r'Total heat capacity $C_V$ in the Ising model for L=4')
+xlabel(r'$\beta$')
+ylabel(r'$C_V$')
+show()
+
+figure()
+plot(betas, cvs5)
+title(r'Total heat capacity $C_V$ in the Ising model for L=5')
+xlabel(r'$\beta$')
+ylabel(r'$C_V$')
+show()
+
+figure()
+plot(betas, cvs10)
+title(r'Total heat capacity $C_V$ in the Ising model for L=10')
+xlabel(r'$\beta$')
+ylabel(r'$C_V$')
+show()
+
+figure()
+plot(betas, cvs15)
+title(r'Total heat capacity $C_V$ in the Ising model for L=15')
+xlabel(r'$\beta$')
+ylabel(r'$C_V$')
+show()
+
+figure()
+plot(betas, cvs20)
+title(r'Total heat capacity $C_V$ in the Ising model for L=20')
+xlabel(r'$\beta$')
+ylabel(r'$C_V$')
+show()
+
+'''
+
 
 # Example from before:
 """

@@ -5,7 +5,7 @@ import time
 import sys
 
 # Open the file for reading
-infile = open("beta0to5_Nbetas100_spin0p5_L15_J1_mcsteps1000_bins100_091216_1340_IsingMC.txt", "r")
+infile = open("beta0to5_Nbetas100_spin0p5_L20_J1_mcsteps1000_bins100_091216_1340_IsingMC.txt", "r")
 
 # The first line contains information about the system. We read that separately
 firstline = infile.readline() # Reads the first line only
@@ -381,3 +381,4 @@ xlabel(r'$\beta$')
 ylabel(r'$U_L$')
 legend(loc="upper right")
 show()
+
